@@ -102,22 +102,12 @@ cd perfect-web-clone
 ```bash
 cd backend
 
-# Create virtual environment
-python3 -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Install Playwright browsers
-playwright install chromium
-
-# Configure environment
+# Copy environment file and add your API key
 cp ../.env.example .env
 # Edit .env and add your ANTHROPIC_API_KEY
 
-# Start the server
-python main.py
+# Start the server (auto-installs dependencies)
+sh start.sh
 ```
 
 3. **Frontend Setup**

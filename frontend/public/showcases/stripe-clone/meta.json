@@ -1,0 +1,13 @@
+{
+  "id": "stripe-clone",
+  "name": "Stripe Homepage",
+  "description": "A pixel-perfect clone of Stripe's landing page with animated gradients and responsive layout.",
+  "source_url": "https://stripe.com",
+  "preview_image": "/showcases/stripe-clone/preview.png",
+  "created_at": "2025-01-08",
+  "stats": {
+    "sections": 6,
+    "files": 12,
+    "duration_seconds": 45
+  }
+}

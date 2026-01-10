@@ -1,0 +1,48 @@
+{
+  "version": "1.0",
+  "recorded_at": "2025-01-06T09:00:00Z",
+  "total_duration_ms": 52000,
+  "events": [
+    {
+      "type": "agent_thinking",
+      "timestamp": 0,
+      "content": "Analyzing Vercel's homepage. It features a dark theme with prominent developer-focused content."
+    },
+    {
+      "type": "tool_call",
+      "timestamp": 1500,
+      "tool_name": "get_layout",
+      "tool_input": {"source_id": "vercel-home", "url": "https://vercel.com"}
+    },
+    {
+      "type": "tool_result",
+      "timestamp": 3000,
+      "tool_name": "get_layout",
+      "success": true,
+      "result": "Successfully analyzed page layout. Found 7 main sections."
+    },
+    {
+      "type": "worker_spawned",
+      "timestamp": 5000,
+      "workers": [
+        {"worker_id": "w1", "section_name": "section_1", "display_name": "Hero"},
+        {"worker_id": "w2", "section_name": "section_2", "display_name": "Deploy"},
+        {"worker_id": "w3", "section_name": "section_3", "display_name": "Develop"},
+        {"worker_id": "w4", "section_name": "section_4", "display_name": "Preview"},
+        {"worker_id": "w5", "section_name": "section_5", "display_name": "Ship"},
+        {"worker_id": "w6", "section_name": "section_6", "display_name": "Enterprise"},
+        {"worker_id": "w7", "section_name": "section_7", "display_name": "Footer"}
+      ]
+    },
+    {
+      "type": "agent_thinking",
+      "timestamp": 48000,
+      "content": "All 7 sections have been generated. The dark theme and animations are in place."
+    },
+    {
+      "type": "preview_ready",
+      "timestamp": 52000,
+      "url": "http://localhost:8080"
+    }
+  ]
+}

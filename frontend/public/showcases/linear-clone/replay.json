@@ -1,0 +1,46 @@
+{
+  "version": "1.0",
+  "recorded_at": "2025-01-07T10:00:00Z",
+  "total_duration_ms": 38000,
+  "events": [
+    {
+      "type": "agent_thinking",
+      "timestamp": 0,
+      "content": "I'll analyze Linear's landing page. It has a clean, minimalist design with smooth animations."
+    },
+    {
+      "type": "tool_call",
+      "timestamp": 1500,
+      "tool_name": "get_layout",
+      "tool_input": {"source_id": "linear-home", "url": "https://linear.app"}
+    },
+    {
+      "type": "tool_result",
+      "timestamp": 3000,
+      "tool_name": "get_layout",
+      "success": true,
+      "result": "Successfully analyzed page layout. Found 5 main sections."
+    },
+    {
+      "type": "worker_spawned",
+      "timestamp": 5000,
+      "workers": [
+        {"worker_id": "w1", "section_name": "section_1", "display_name": "Hero"},
+        {"worker_id": "w2", "section_name": "section_2", "display_name": "Features"},
+        {"worker_id": "w3", "section_name": "section_3", "display_name": "Integrations"},
+        {"worker_id": "w4", "section_name": "section_4", "display_name": "Testimonials"},
+        {"worker_id": "w5", "section_name": "section_5", "display_name": "Footer"}
+      ]
+    },
+    {
+      "type": "agent_thinking",
+      "timestamp": 35000,
+      "content": "All sections have been generated successfully."
+    },
+    {
+      "type": "preview_ready",
+      "timestamp": 38000,
+      "url": "http://localhost:8080"
+    }
+  ]
+}

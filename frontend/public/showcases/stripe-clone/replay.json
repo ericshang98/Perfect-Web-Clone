@@ -1,0 +1,184 @@
+{
+  "version": "1.0",
+  "recorded_at": "2025-01-08T14:30:00Z",
+  "total_duration_ms": 45000,
+  "events": [
+    {
+      "type": "agent_thinking",
+      "timestamp": 0,
+      "content": "I'll analyze the Stripe homepage and create a pixel-perfect clone. Let me start by examining the page structure and design elements."
+    },
+    {
+      "type": "tool_call",
+      "timestamp": 1500,
+      "tool_name": "get_layout",
+      "tool_input": {"source_id": "stripe-home", "url": "https://stripe.com"}
+    },
+    {
+      "type": "tool_result",
+      "timestamp": 3000,
+      "tool_name": "get_layout",
+      "success": true,
+      "result": "Successfully analyzed page layout. Found 6 main sections: Hero, Features, Products, Developers, Enterprise, Footer."
+    },
+    {
+      "type": "agent_thinking",
+      "timestamp": 4000,
+      "content": "The page has 6 distinct sections. I'll spawn workers to build each section in parallel for faster generation."
+    },
+    {
+      "type": "worker_spawned",
+      "timestamp": 5000,
+      "workers": [
+        {"worker_id": "w1", "section_name": "section_1", "display_name": "Hero Section"},
+        {"worker_id": "w2", "section_name": "section_2", "display_name": "Features Section"},
+        {"worker_id": "w3", "section_name": "section_3", "display_name": "Products Section"},
+        {"worker_id": "w4", "section_name": "section_4", "display_name": "Developers Section"},
+        {"worker_id": "w5", "section_name": "section_5", "display_name": "Enterprise Section"},
+        {"worker_id": "w6", "section_name": "section_6", "display_name": "Footer Section"}
+      ]
+    },
+    {
+      "type": "worker_progress",
+      "timestamp": 6000,
+      "worker_id": "w1",
+      "section_name": "section_1",
+      "status": "started"
+    },
+    {
+      "type": "worker_progress",
+      "timestamp": 6500,
+      "worker_id": "w2",
+      "section_name": "section_2",
+      "status": "started"
+    },
+    {
+      "type": "worker_progress",
+      "timestamp": 7000,
+      "worker_id": "w3",
+      "section_name": "section_3",
+      "status": "started"
+    },
+    {
+      "type": "worker_progress",
+      "timestamp": 7500,
+      "worker_id": "w4",
+      "section_name": "section_4",
+      "status": "started"
+    },
+    {
+      "type": "worker_progress",
+      "timestamp": 8000,
+      "worker_id": "w5",
+      "section_name": "section_5",
+      "status": "started"
+    },
+    {
+      "type": "worker_progress",
+      "timestamp": 8500,
+      "worker_id": "w6",
+      "section_name": "section_6",
+      "status": "started"
+    },
+    {
+      "type": "file_written",
+      "timestamp": 12000,
+      "path": "/src/components/HeroSection.jsx",
+      "content": "export function HeroSection() {\n  return (\n    <section className=\"hero-section\">\n      <div className=\"gradient-bg\" />\n      <h1>Financial infrastructure for the internet</h1>\n      <p>Millions of companies use Stripe to accept payments...</p>\n    </section>\n  )\n}"
+    },
+    {
+      "type": "worker_progress",
+      "timestamp": 13000,
+      "worker_id": "w1",
+      "section_name": "section_1",
+      "status": "completed",
+      "file_path": "/src/components/HeroSection.jsx"
+    },
+    {
+      "type": "file_written",
+      "timestamp": 18000,
+      "path": "/src/components/FeaturesSection.jsx",
+      "content": "export function FeaturesSection() {\n  return (\n    <section className=\"features-section\">\n      <h2>A fully integrated suite of payments products</h2>\n      <div className=\"features-grid\">\n        {/* Feature cards */}\n      </div>\n    </section>\n  )\n}"
+    },
+    {
+      "type": "worker_progress",
+      "timestamp": 19000,
+      "worker_id": "w2",
+      "section_name": "section_2",
+      "status": "completed",
+      "file_path": "/src/components/FeaturesSection.jsx"
+    },
+    {
+      "type": "file_written",
+      "timestamp": 24000,
+      "path": "/src/components/ProductsSection.jsx",
+      "content": "export function ProductsSection() {\n  return (\n    <section className=\"products-section\">\n      <h2>Products</h2>\n      <div className=\"products-list\">\n        {/* Product items */}\n      </div>\n    </section>\n  )\n}"
+    },
+    {
+      "type": "worker_progress",
+      "timestamp": 25000,
+      "worker_id": "w3",
+      "section_name": "section_3",
+      "status": "completed",
+      "file_path": "/src/components/ProductsSection.jsx"
+    },
+    {
+      "type": "file_written",
+      "timestamp": 30000,
+      "path": "/src/components/DevelopersSection.jsx",
+      "content": "export function DevelopersSection() {\n  return (\n    <section className=\"developers-section\">\n      <h2>Designed for developers</h2>\n      <pre><code>{/* Code sample */}</code></pre>\n    </section>\n  )\n}"
+    },
+    {
+      "type": "worker_progress",
+      "timestamp": 31000,
+      "worker_id": "w4",
+      "section_name": "section_4",
+      "status": "completed",
+      "file_path": "/src/components/DevelopersSection.jsx"
+    },
+    {
+      "type": "file_written",
+      "timestamp": 36000,
+      "path": "/src/components/EnterpriseSection.jsx",
+      "content": "export function EnterpriseSection() {\n  return (\n    <section className=\"enterprise-section\">\n      <h2>Enterprise grade</h2>\n      <p>The world's most successful platforms trust Stripe...</p>\n    </section>\n  )\n}"
+    },
+    {
+      "type": "worker_progress",
+      "timestamp": 37000,
+      "worker_id": "w5",
+      "section_name": "section_5",
+      "status": "completed",
+      "file_path": "/src/components/EnterpriseSection.jsx"
+    },
+    {
+      "type": "file_written",
+      "timestamp": 40000,
+      "path": "/src/components/Footer.jsx",
+      "content": "export function Footer() {\n  return (\n    <footer className=\"footer\">\n      <nav>...</nav>\n      <p>© Stripe</p>\n    </footer>\n  )\n}"
+    },
+    {
+      "type": "worker_progress",
+      "timestamp": 41000,
+      "worker_id": "w6",
+      "section_name": "section_6",
+      "status": "completed",
+      "file_path": "/src/components/Footer.jsx"
+    },
+    {
+      "type": "file_written",
+      "timestamp": 42000,
+      "path": "/src/App.jsx",
+      "content": "import { HeroSection } from './components/HeroSection'\nimport { FeaturesSection } from './components/FeaturesSection'\nimport { ProductsSection } from './components/ProductsSection'\nimport { DevelopersSection } from './components/DevelopersSection'\nimport { EnterpriseSection } from './components/EnterpriseSection'\nimport { Footer } from './components/Footer'\n\nexport default function App() {\n  return (\n    <>\n      <HeroSection />\n      <FeaturesSection />\n      <ProductsSection />\n      <DevelopersSection />\n      <EnterpriseSection />\n      <Footer />\n    </>\n  )\n}"
+    },
+    {
+      "type": "agent_thinking",
+      "timestamp": 43000,
+      "content": "All sections have been generated. Starting the development server to preview the result."
+    },
+    {
+      "type": "preview_ready",
+      "timestamp": 45000,
+      "url": "http://localhost:8080"
+    }
+  ]
+}

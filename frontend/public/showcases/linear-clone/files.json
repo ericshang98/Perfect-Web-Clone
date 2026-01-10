@@ -1,0 +1,6 @@
+{
+  "files": {
+    "/src/App.jsx": "import './App.css'\n\nexport default function App() {\n  return (\n    <div className=\"app\">\n      <h1>Linear Clone</h1>\n      <p>A clean, modern issue tracker</p>\n    </div>\n  )\n}",
+    "/package.json": "{\n  \"name\": \"linear-clone\",\n  \"private\": true,\n  \"type\": \"module\"\n}"
+  }
+}
