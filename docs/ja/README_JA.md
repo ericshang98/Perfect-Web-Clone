@@ -39,9 +39,17 @@ https://github.com/user-attachments/assets/248af639-20d9-45a8-ad0a-660a04a17b68
 
 ### なぜ Cursor / Claude Code / Copilot を使わないのか？
 
+<p align="center">
+  <img src="https://img.shields.io/badge/Cursor-000000?style=for-the-badge&logo=cursor&logoColor=white" alt="Cursor" />
+  <img src="https://img.shields.io/badge/Claude_Code-cc785c?style=for-the-badge&logo=anthropic&logoColor=white" alt="Claude Code" />
+  <img src="https://img.shields.io/badge/GitHub_Copilot-000000?style=for-the-badge&logo=githubcopilot&logoColor=white" alt="GitHub Copilot" />
+  <span style="margin: 0 10px;">vs</span>
+  <img src="https://img.shields.io/badge/Nexting-8B5CF6?style=for-the-badge" alt="Nexting" />
+</p>
+
 試しました。**完全な抽出JSON** — フルDOMツリー、すべてのCSSルール、すべてのアセットURL — を渡しても、シングルモデルツールは苦戦します：
 
-| 課題 | Cursor / Claude Code / Copilot | Nexting マルチエージェント |
+| 課題 | <img src="https://img.shields.io/badge/-Cursor-000?style=flat-square&logo=cursor" /> <img src="https://img.shields.io/badge/-Claude_Code-cc785c?style=flat-square&logo=anthropic" /> <img src="https://img.shields.io/badge/-Copilot-000?style=flat-square&logo=githubcopilot" /> | <img src="https://img.shields.io/badge/-Nexting-8B5CF6?style=flat-square" /> マルチエージェント |
 |------|-------------------------------|---------------------------|
 | **50,000行以上のDOMツリー** | ❌ コンテキストオーバーフロー、重要部分を切り捨て | ✅ DOMエージェントがチャンク処理 |
 | **3,000以上のCSSルール** | ❌ 優先度を失い、変数を見逃す | ✅ スタイルエージェントがCSS専門処理 |

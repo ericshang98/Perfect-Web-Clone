@@ -39,9 +39,17 @@ Our solution: **Specialized agents working in parallel**, each focused on what i
 
 ### Why Not Just Use Cursor / Claude Code / Copilot?
 
+<p align="center">
+  <img src="https://img.shields.io/badge/Cursor-000000?style=for-the-badge&logo=cursor&logoColor=white" alt="Cursor" />
+  <img src="https://img.shields.io/badge/Claude_Code-cc785c?style=for-the-badge&logo=anthropic&logoColor=white" alt="Claude Code" />
+  <img src="https://img.shields.io/badge/GitHub_Copilot-000000?style=for-the-badge&logo=githubcopilot&logoColor=white" alt="GitHub Copilot" />
+  <span style="margin: 0 10px;">vs</span>
+  <img src="https://img.shields.io/badge/Nexting-8B5CF6?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNNCAyMEM0IDEyIDEwIDYgMTggNkMxMCA3LjUgNiAxMiA2IDE4QzYgMjEgOCAyMyAxMiAyNEM4IDI0IDQgMjIgNCAyMFoiIGZpbGw9IndoaXRlIi8+PC9zdmc+&logoColor=white" alt="Nexting" />
+</p>
+
 We tried. Even with the **complete extracted JSON** — full DOM tree, all CSS rules, every asset URL — single-model tools struggle:
 
-| Challenge | Cursor / Claude Code / Copilot | Nexting Multi-Agent |
+| Challenge | <img src="https://img.shields.io/badge/-Cursor-000?style=flat-square&logo=cursor" /> <img src="https://img.shields.io/badge/-Claude_Code-cc785c?style=flat-square&logo=anthropic" /> <img src="https://img.shields.io/badge/-Copilot-000?style=flat-square&logo=githubcopilot" /> | <img src="https://img.shields.io/badge/-Nexting-8B5CF6?style=flat-square" /> Multi-Agent |
 |-----------|-------------------------------|---------------------|
 | **50,000+ line DOM tree** | ❌ Context overflow, truncates critical parts | ✅ DOM Agent processes in chunks |
 | **3,000+ CSS rules** | ❌ Loses specificity, misses variables | ✅ Style Agent handles CSS separately |

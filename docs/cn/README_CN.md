@@ -39,9 +39,17 @@ https://github.com/user-attachments/assets/248af639-20d9-45a8-ad0a-660a04a17b68
 
 ### 为什么不直接用 Cursor / Claude Code / Copilot？
 
+<p align="center">
+  <img src="https://img.shields.io/badge/Cursor-000000?style=for-the-badge&logo=cursor&logoColor=white" alt="Cursor" />
+  <img src="https://img.shields.io/badge/Claude_Code-cc785c?style=for-the-badge&logo=anthropic&logoColor=white" alt="Claude Code" />
+  <img src="https://img.shields.io/badge/GitHub_Copilot-000000?style=for-the-badge&logo=githubcopilot&logoColor=white" alt="GitHub Copilot" />
+  <span style="margin: 0 10px;">vs</span>
+  <img src="https://img.shields.io/badge/Nexting-8B5CF6?style=for-the-badge" alt="Nexting" />
+</p>
+
 我们试过了。即使给它们 **完整的提取 JSON** — 完整的 DOM 树、所有 CSS 规则、每个资源 URL — 单模型工具依然力不从心：
 
-| 挑战 | Cursor / Claude Code / Copilot | Nexting 多代理 |
+| 挑战 | <img src="https://img.shields.io/badge/-Cursor-000?style=flat-square&logo=cursor" /> <img src="https://img.shields.io/badge/-Claude_Code-cc785c?style=flat-square&logo=anthropic" /> <img src="https://img.shields.io/badge/-Copilot-000?style=flat-square&logo=githubcopilot" /> | <img src="https://img.shields.io/badge/-Nexting-8B5CF6?style=flat-square" /> 多代理 |
 |------|-------------------------------|----------------|
 | **50,000+ 行 DOM 树** | ❌ 上下文溢出，截断关键部分 | ✅ DOM 代理分块处理 |
 | **3,000+ 条 CSS 规则** | ❌ 丢失优先级，遗漏变量 | ✅ 样式代理独立处理 CSS |
