@@ -2,7 +2,9 @@
 
 <div align="center">
 
-**AI駆動のWebクローンツール - 抽出、分析、クローン**
+**AI駆動のWebクローンツール — Claude Agent SDKで構築**
+
+*Webクローン向けのClaude Code。40以上の専門ツールを備えた垂直AIエージェント。*
 
 [English](../../README.md) | [中文](../cn/README_CN.md) | 日本語
 
@@ -100,6 +102,7 @@ https://github.com/user-attachments/assets/248af639-20d9-45a8-ad0a-660a04a17b68
 ## 目次
 
 - [オープンソースマルチエージェントアーキテクチャ](#オープンソースマルチエージェントアーキテクチャ)
+- [エージェントツールキット](#エージェントツールキット)
 - [なぜNexting？](#なぜnexting)
 - [機能](#機能)
 - [デモ](#デモ)
@@ -109,6 +112,55 @@ https://github.com/user-attachments/assets/248af639-20d9-45a8-ad0a-660a04a17b68
 - [技術スタック](#技術スタック)
 - [コントリビューション](#コントリビューション)
 - [ライセンス](#ライセンス)
+
+## エージェントツールキット
+
+**[Claude Agent SDK](https://docs.anthropic.com/en/docs/agents-and-tools/claude-agent-sdk)** で構築 — Claude Codeと同じ基盤です。これはAPI呼び出し付きのチャットボットではありません。隔離されたサンドボックスで考え、計画し、実行し、自己修正する**真のエージェント**です。
+
+### 10カテゴリ40以上のツール
+
+| カテゴリ | ツール | 目的 |
+|---------|--------|------|
+| **ファイル操作** | `read_file`, `write_file`, `edit_file`, `delete_file`, `rename_file`, `create_directory` | プロジェクトファイルのCRUD操作 |
+| **検索と発見** | `glob`, `grep`, `ls`, `search_in_file`, `search_in_project` | ファイルとコンテンツの検索（ripgrep搭載）|
+| **タスク管理** | `todo_read`, `todo_write`, `task`, `get_subagent_status` | 進捗追跡、サブエージェント起動 |
+| **システム実行** | `bash`, `run_command`, `shell` | サンドボックスで任意のコマンドを実行 |
+| **ネットワーク** | `web_fetch`, `web_search` | URLフェッチ、Web検索 |
+| **ターミナル** | `create_terminal`, `send_terminal_input`, `get_terminal_output`, `install_dependencies`, `start_dev_server` | 複数ターミナルセッションの管理 |
+| **プレビュー** | `take_screenshot`, `get_console_messages`, `get_preview_dom`, `get_preview_status` | ライブプレビュー状態の検査 |
+| **診断** | `verify_changes`, `diagnose_preview_state`, `analyze_build_error`, `get_comprehensive_error_snapshot` | デバッグと検証 |
+| **自己修復** | `start_healing_loop`, `verify_healing_progress`, `stop_healing_loop` | ビルドエラーの自動修正 |
+| **ソースクエリ** | `list_saved_sources`, `get_source_overview`, `query_source_json` | 抽出したWebサイトデータのクエリ |
+
+### 設計哲学
+
+```
+┌────────────────────────────────────────────────────────────┐
+│                      Claude Agent SDK                       │
+│  ┌──────────────────────────────────────────────────────┐  │
+│  │                    Nexting Agent                      │  │
+│  │  ┌─────────┐  ┌─────────┐  ┌─────────┐  ┌─────────┐ │  │
+│  │  │プランナー│  │コーダー │  │デバッガー│  │検証器  │ │  │
+│  │  └────┬────┘  └────┬────┘  └────┬────┘  └────┬────┘ │  │
+│  │       └──────────┬─┴───────────┬┴────────────┘      │  │
+│  │                  ▼             ▼                     │  │
+│  │         ┌──────────────────────────────┐            │  │
+│  │         │      40以上の専門ツール       │            │  │
+│  │         └──────────────┬───────────────┘            │  │
+│  └────────────────────────┼────────────────────────────┘  │
+│                           ▼                                │
+│  ┌──────────────────────────────────────────────────────┐  │
+│  │            BoxLiteサンドボックス (マイクロVM)         │  │
+│  │       コード実行とプレビューのための隔離環境          │  │
+│  └──────────────────────────────────────────────────────┘  │
+└────────────────────────────────────────────────────────────┘
+```
+
+**ChatGPT/Claudeチャットとの違いは？**
+- **永続的状態**：エージェントはセッション全体でコンテキストを記憶
+- **ツールチェーン**：人間の介入なしで10以上のツールを連続実行可能
+- **自己修正**：エラーを検出し、根本原因を診断し、自動修正
+- **ライブプレビュー**：コードだけでなく、実際のレンダリング出力を確認
 
 ## なぜNexting？
 

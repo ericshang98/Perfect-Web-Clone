@@ -2,7 +2,9 @@
 
 <div align="center">
 
-**AI 驱动的网页克隆工具 - 提取、分析、克隆**
+**AI 驱动的网页克隆工具 — 基于 Claude Agent SDK 构建**
+
+*网页克隆领域的 Claude Code。一个配备 40+ 专业工具的垂直 AI Agent。*
 
 [English](../../README.md) | 中文 | [日本語](../ja/README_JA.md)
 
@@ -100,6 +102,7 @@ https://github.com/user-attachments/assets/248af639-20d9-45a8-ad0a-660a04a17b68
 ## 目录
 
 - [开源多代理架构](#开源多代理架构)
+- [Agent 工具包](#agent-工具包)
 - [为什么选择 Nexting？](#为什么选择-nexting)
 - [功能特性](#功能特性)
 - [演示](#演示)
@@ -109,6 +112,55 @@ https://github.com/user-attachments/assets/248af639-20d9-45a8-ad0a-660a04a17b68
 - [技术栈](#技术栈)
 - [贡献](#贡献)
 - [许可证](#许可证)
+
+## Agent 工具包
+
+基于 **[Claude Agent SDK](https://docs.anthropic.com/en/docs/agents-and-tools/claude-agent-sdk)** 构建 — 与 Claude Code 相同的底层架构。这不是一个带 API 调用的聊天机器人；它是一个**真正的 Agent**，能够在隔离沙箱中思考、规划、执行和自我修正。
+
+### 10 大类 40+ 工具
+
+| 类别 | 工具 | 用途 |
+|------|------|------|
+| **文件操作** | `read_file`, `write_file`, `edit_file`, `delete_file`, `rename_file`, `create_directory` | 项目文件的 CRUD 操作 |
+| **搜索发现** | `glob`, `grep`, `ls`, `search_in_file`, `search_in_project` | 查找文件和内容（ripgrep 驱动）|
+| **任务管理** | `todo_read`, `todo_write`, `task`, `get_subagent_status` | 追踪进度，启动子代理 |
+| **系统执行** | `bash`, `run_command`, `shell` | 在沙箱中运行任意命令 |
+| **网络** | `web_fetch`, `web_search` | 获取 URL，搜索网络 |
+| **终端** | `create_terminal`, `send_terminal_input`, `get_terminal_output`, `install_dependencies`, `start_dev_server` | 管理多个终端会话 |
+| **预览** | `take_screenshot`, `get_console_messages`, `get_preview_dom`, `get_preview_status` | 检查实时预览状态 |
+| **诊断** | `verify_changes`, `diagnose_preview_state`, `analyze_build_error`, `get_comprehensive_error_snapshot` | 调试和验证 |
+| **自我修复** | `start_healing_loop`, `verify_healing_progress`, `stop_healing_loop` | 自动修复构建错误 |
+| **源数据查询** | `list_saved_sources`, `get_source_overview`, `query_source_json` | 查询提取的网站数据 |
+
+### 设计哲学
+
+```
+┌────────────────────────────────────────────────────────────┐
+│                      Claude Agent SDK                       │
+│  ┌──────────────────────────────────────────────────────┐  │
+│  │                    Nexting Agent                      │  │
+│  │  ┌─────────┐  ┌─────────┐  ┌─────────┐  ┌─────────┐ │  │
+│  │  │ 规划器  │  │ 编码器  │  │ 调试器  │  │ 验证器  │ │  │
+│  │  └────┬────┘  └────┬────┘  └────┬────┘  └────┬────┘ │  │
+│  │       └──────────┬─┴───────────┬┴────────────┘      │  │
+│  │                  ▼             ▼                     │  │
+│  │         ┌──────────────────────────────┐            │  │
+│  │         │       40+ 专业工具            │            │  │
+│  │         └──────────────┬───────────────┘            │  │
+│  └────────────────────────┼────────────────────────────┘  │
+│                           ▼                                │
+│  ┌──────────────────────────────────────────────────────┐  │
+│  │              BoxLite 沙箱 (微型虚拟机)                │  │
+│  │         隔离的代码执行和预览环境                      │  │
+│  └──────────────────────────────────────────────────────┘  │
+└────────────────────────────────────────────────────────────┘
+```
+
+**与 ChatGPT/Claude 聊天有什么不同？**
+- **持久状态**：Agent 在整个会话中记住上下文
+- **工具链**：可以连续执行 10+ 个工具，无需人工干预
+- **自我修正**：检测错误，诊断根因，自动修复
+- **实时预览**：看到实际渲染输出，而不仅仅是代码
 
 ## 为什么选择 Nexting？
 

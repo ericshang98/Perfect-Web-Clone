@@ -2,7 +2,9 @@
 
 <div align="center">
 
-**AI-Powered Web Cloning Tool - Extract, Analyze, Clone**
+**AI-Powered Web Cloning Tool — Built with Claude Agent SDK**
+
+*Claude Code for web cloning. A vertical AI agent with 40+ specialized tools.*
 
 English | [中文](./docs/cn/README_CN.md) | [日本語](./docs/ja/README_JA.md)
 
@@ -100,6 +102,7 @@ Building something with this architecture? Have questions? Reach out:
 ## Table of Contents
 
 - [Open Source Multi-Agent Architecture](#open-source-multi-agent-architecture)
+- [Agent Toolkit](#agent-toolkit)
 - [Why Nexting?](#why-nexting)
 - [Features](#features)
 - [Demo](#demo)
@@ -109,6 +112,55 @@ Building something with this architecture? Have questions? Reach out:
 - [Tech Stack](#tech-stack)
 - [Contributing](#contributing)
 - [License](#license)
+
+## Agent Toolkit
+
+Built on **[Claude Agent SDK](https://docs.anthropic.com/en/docs/agents-and-tools/claude-agent-sdk)** — the same foundation as Claude Code. This isn't a chatbot with API calls; it's a **real agent** that thinks, plans, executes, and self-corrects in an isolated sandbox.
+
+### 40+ Tools Across 10 Categories
+
+| Category | Tools | Purpose |
+|----------|-------|---------|
+| **File Operations** | `read_file`, `write_file`, `edit_file`, `delete_file`, `rename_file`, `create_directory` | CRUD operations on project files |
+| **Search & Discovery** | `glob`, `grep`, `ls`, `search_in_file`, `search_in_project` | Find files and content (ripgrep-powered) |
+| **Task Management** | `todo_read`, `todo_write`, `task`, `get_subagent_status` | Track progress, spawn sub-agents |
+| **System Execution** | `bash`, `run_command`, `shell` | Run any command in sandbox |
+| **Network** | `web_fetch`, `web_search` | Fetch URLs, search the web |
+| **Terminal** | `create_terminal`, `send_terminal_input`, `get_terminal_output`, `install_dependencies`, `start_dev_server` | Manage multiple terminal sessions |
+| **Preview** | `take_screenshot`, `get_console_messages`, `get_preview_dom`, `get_preview_status` | Inspect live preview state |
+| **Diagnostics** | `verify_changes`, `diagnose_preview_state`, `analyze_build_error`, `get_comprehensive_error_snapshot` | Debug and validate |
+| **Self-Healing** | `start_healing_loop`, `verify_healing_progress`, `stop_healing_loop` | Auto-fix build errors |
+| **Source Query** | `list_saved_sources`, `get_source_overview`, `query_source_json` | Query extracted website data |
+
+### Design Philosophy
+
+```
+┌────────────────────────────────────────────────────────────┐
+│                      Claude Agent SDK                       │
+│  ┌──────────────────────────────────────────────────────┐  │
+│  │                    Nexting Agent                      │  │
+│  │  ┌─────────┐  ┌─────────┐  ┌─────────┐  ┌─────────┐ │  │
+│  │  │ Planner │  │ Coder   │  │ Debugger│  │ Verifier│ │  │
+│  │  └────┬────┘  └────┬────┘  └────┬────┘  └────┬────┘ │  │
+│  │       └──────────┬─┴───────────┬┴────────────┘      │  │
+│  │                  ▼             ▼                     │  │
+│  │         ┌──────────────────────────────┐            │  │
+│  │         │      40+ Specialized Tools    │            │  │
+│  │         └──────────────┬───────────────┘            │  │
+│  └────────────────────────┼────────────────────────────┘  │
+│                           ▼                                │
+│  ┌──────────────────────────────────────────────────────┐  │
+│  │              BoxLite Sandbox (Micro-VM)              │  │
+│  │    Isolated environment for code execution & preview  │  │
+│  └──────────────────────────────────────────────────────┘  │
+└────────────────────────────────────────────────────────────┘
+```
+
+**What makes this different from ChatGPT/Claude chat?**
+- **Persistent state**: Agent remembers context across the entire session
+- **Tool chaining**: Can execute 10+ tools in sequence without human intervention
+- **Self-correction**: Detects errors, diagnoses root cause, fixes automatically
+- **Live preview**: Sees actual rendered output, not just code
 
 ## Why Nexting?
 
