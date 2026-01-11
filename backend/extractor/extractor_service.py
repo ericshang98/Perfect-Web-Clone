@@ -1092,10 +1092,8 @@ class PlaywrightExtractorService:
 
             await asyncio.sleep(0.3)  # 等待样式开始应用
 
-            # ========== 滚动页面触发主题相关的懒加载 ==========
-            # 切换主题后，某些图片/资源可能需要重新懒加载（如 srcset 切换、主题特定图片等）
-            logger.debug(f"[主题数据提取] {theme_str} 开始滚动触发懒加载...")
-            await self._scroll_to_load_lazy_content(page, max_scrolls=30, scroll_delay=0.2)
+            # 注意：主流程已经完成了完整滚动，切换主题后不需要再次滚动
+            # 主题切换只影响 CSS 变量和样式，不会触发新的懒加载
 
             logger.info(f"[主题数据提取] 正在提取 {theme_str} 模式数据...")
 
@@ -1129,25 +1127,18 @@ class PlaywrightExtractorService:
             except Exception as e:
                 logger.error(f"[主题数据提取] {theme_str} 资源提取失败: {e}")
 
-            # 4. 提取样式汇总（颜色统计会随主题变化）
-            try:
-                style_summary = await self._extract_style_summary(page)
-                logger.debug(f"[主题数据提取] {theme_str} 样式汇总完成")
-            except Exception as e:
-                logger.error(f"[主题数据提取] {theme_str} 样式汇总失败: {e}")
-
-            # 5. 提取 CSS 数据（主要是 CSS 变量会变化）
+            # 4. 提取 CSS 数据（主要是 CSS 变量会变化）
             if request.extract_css:
                 try:
-                    css_data = await self._extract_css_data(page)
+                    css_data = await self._extract_css_data(page, request.url)
                     logger.debug(f"[主题数据提取] {theme_str} CSS 数据完成: {len(css_data.variables) if css_data else 0} variables")
                 except Exception as e:
                     logger.error(f"[主题数据提取] {theme_str} CSS 数据提取失败: {e}")
 
-            # 6. 下载资源（图片内容可能不同）
+            # 5. 下载资源（图片内容可能不同）
             if request.download_resources:
                 try:
-                    downloaded_resources = await self._download_resources(page, assets)
+                    downloaded_resources = await self._download_resources(page, assets, request.url)
                     logger.debug(f"[主题数据提取] {theme_str} 资源下载完成")
                 except Exception as e:
                     logger.error(f"[主题数据提取] {theme_str} 资源下载失败: {e}")
