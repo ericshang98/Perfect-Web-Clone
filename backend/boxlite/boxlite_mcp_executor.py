@@ -1438,6 +1438,24 @@ class BoxLiteMCPExecutor:
             # Store for spawn_workers
             self._last_layout_sections = section_configs
 
+            # ========================================
+            # DEBUG: Check for duplicate HTML content
+            # ========================================
+            html_hashes = {}
+            for cfg in section_configs:
+                section_html = cfg.get("_section_data", {}).get("raw_html", "")
+                if section_html:
+                    # Use first 500 chars as a fingerprint
+                    html_fingerprint = section_html[:500]
+                    if html_fingerprint in html_hashes:
+                        logger.warning(
+                            f"[get_layout] ⚠️ DUPLICATE HTML detected!\n"
+                            f"  Section '{cfg['section_name']}' has same HTML as '{html_hashes[html_fingerprint]}'\n"
+                            f"  HTML preview: {html_fingerprint[:100]}..."
+                        )
+                    else:
+                        html_hashes[html_fingerprint] = cfg['section_name']
+
             # Create integration plan
             self._last_integration_plan = create_integration_plan(
                 contracts=self._last_task_contracts,
