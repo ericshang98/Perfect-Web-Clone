@@ -599,56 +599,9 @@ Simply use them exactly as they appear in the HTML - no conversion needed.
 | `<!--comment-->` | `{{/* comment */}}` |
 | `style="color: red"` | `style={{{{ color: 'red' }}}}` |
 
-## 🎮 INTERACTIVE ELEMENTS - AUTO-ADD REACT STATE
+## 🎮 INTERACTIVE ELEMENTS
 
-When you detect these patterns in the HTML, you MUST add React interactivity:
-
-### 1. Modal / Popup / Overlay
-**Detection**: Elements with classes like `modal`, `popup`, `overlay`, `dialog`, or `position: fixed` covering the viewport
-**Action**:
-- Add `useState` for visibility: `const [isOpen, setIsOpen] = useState(false)`
-- Default to `isOpen = false` (hidden) - users don't want popups blocking content
-- Find close button (X icon, `close` class, `dismiss` class) and add `onClick={{() => setIsOpen(false)}}`
-- Wrap entire modal in: `if (!isOpen) return null;`
-
-```jsx
-import React, {{ useState }} from 'react';
-
-export default function ModalSection() {{
-  const [isOpen, setIsOpen] = useState(false);  // Default hidden
-
-  if (!isOpen) return null;
-
-  return (
-    <div className="modal-overlay">
-      <div className="modal">
-        <button className="close-btn" onClick={{() => setIsOpen(false)}}>×</button>
-        {{/* rest of modal content */}}
-      </div>
-    </div>
-  );
-}}
-```
-
-### 2. Dropdown / Accordion
-**Detection**: Elements with `dropdown`, `accordion`, `collapse`, `expandable` classes, or toggle buttons
-**Action**:
-- Add `useState` for open state: `const [isExpanded, setIsExpanded] = useState(false)`
-- Add `onClick` to toggle button: `onClick={{() => setIsExpanded(!isExpanded)}}`
-- Conditionally render content: `{{isExpanded && <div>...</div>}}`
-
-### 3. Navigation Menu (Mobile)
-**Detection**: Hamburger menu icon (☰), `menu-toggle`, `nav-toggle` classes
-**Action**:
-- Add `useState` for menu state: `const [menuOpen, setMenuOpen] = useState(false)`
-- Toggle on hamburger click
-- Show/hide nav items based on state
-
-### 4. Close Button Detection
-**Look for**: `×`, `✕`, `X`, `close`, `dismiss`, `btn-close`, `icon-close`, `modal-close`
-**Always add**: `onClick` handler to close/hide the parent element
-
-**IMPORTANT**: This is the ONE exception where you ADD code not in the original HTML. Interactive elements need React state to function properly.
+If you see interactive elements (modals, dropdowns, accordions, mobile menus, etc.), you may add `useState` to make them functional. For modals/popups, default to hidden state so they don't block content.
 
 ## 🛠️ YOUR TOOL
 
