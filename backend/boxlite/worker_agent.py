@@ -509,6 +509,7 @@ class BoxLiteWorkerAgent:
         full_path = f"{self.base_path}/{self.namespace}/{component_name}.jsx"
 
         # Get section data from context
+        # Note: All URLs in raw_html have been pre-resolved to absolute URLs by BoxLiteMCPExecutor
         section_data = self.config.context_data.get("section_data", {})
         raw_html = section_data.get("raw_html", "")
         styles = section_data.get("styles", {})
@@ -535,14 +536,11 @@ This is the HTML you must replicate. Study it carefully:
 ## 📦 MEDIA INFO
 
 This section contains:
-- **Images**: {len(images)} (extract src URLs from HTML above)
-- **Links**: {len(links)} (extract href URLs from HTML above)
+- **Images**: {len(images)} items
+- **Links**: {len(links)} items
 
-**CRITICAL**:
-- Extract ALL image `src` and link `href` values directly from the HTML
-- Use the EXACT URLs as they appear - DO NOT modify or transform them
-- Keep absolute URLs (https://...) exactly as-is
-- Keep relative URLs exactly as-is
+**NOTE**: All URLs in the HTML have been pre-resolved to absolute URLs (https://...).
+Simply use them exactly as they appear in the HTML - no conversion needed.
 """
 
         # Build styles section
@@ -572,7 +570,7 @@ This section contains:
 **YOU MUST:**
 - ✅ Convert the provided HTML to JSX syntax EXACTLY
 - ✅ Keep ALL text content word-for-word
-- ✅ Keep ALL URLs exactly as provided
+- ✅ Keep ALL URLs exactly as they appear (they are already absolute)
 - ✅ Keep ALL class names, IDs, and attributes
 - ✅ Convert HTML attributes to JSX (class → className, for → htmlFor, etc.)
 
@@ -601,6 +599,57 @@ This section contains:
 | `<!--comment-->` | `{{/* comment */}}` |
 | `style="color: red"` | `style={{{{ color: 'red' }}}}` |
 
+## 🎮 INTERACTIVE ELEMENTS - AUTO-ADD REACT STATE
+
+When you detect these patterns in the HTML, you MUST add React interactivity:
+
+### 1. Modal / Popup / Overlay
+**Detection**: Elements with classes like `modal`, `popup`, `overlay`, `dialog`, or `position: fixed` covering the viewport
+**Action**:
+- Add `useState` for visibility: `const [isOpen, setIsOpen] = useState(false)`
+- Default to `isOpen = false` (hidden) - users don't want popups blocking content
+- Find close button (X icon, `close` class, `dismiss` class) and add `onClick={{() => setIsOpen(false)}}`
+- Wrap entire modal in: `if (!isOpen) return null;`
+
+```jsx
+import React, {{ useState }} from 'react';
+
+export default function ModalSection() {{
+  const [isOpen, setIsOpen] = useState(false);  // Default hidden
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="modal-overlay">
+      <div className="modal">
+        <button className="close-btn" onClick={{() => setIsOpen(false)}}>×</button>
+        {{/* rest of modal content */}}
+      </div>
+    </div>
+  );
+}}
+```
+
+### 2. Dropdown / Accordion
+**Detection**: Elements with `dropdown`, `accordion`, `collapse`, `expandable` classes, or toggle buttons
+**Action**:
+- Add `useState` for open state: `const [isExpanded, setIsExpanded] = useState(false)`
+- Add `onClick` to toggle button: `onClick={{() => setIsExpanded(!isExpanded)}}`
+- Conditionally render content: `{{isExpanded && <div>...</div>}}`
+
+### 3. Navigation Menu (Mobile)
+**Detection**: Hamburger menu icon (☰), `menu-toggle`, `nav-toggle` classes
+**Action**:
+- Add `useState` for menu state: `const [menuOpen, setMenuOpen] = useState(false)`
+- Toggle on hamburger click
+- Show/hide nav items based on state
+
+### 4. Close Button Detection
+**Look for**: `×`, `✕`, `X`, `close`, `dismiss`, `btn-close`, `icon-close`, `modal-close`
+**Always add**: `onClick` handler to close/hide the parent element
+
+**IMPORTANT**: This is the ONE exception where you ADD code not in the original HTML. Interactive elements need React state to function properly.
+
 ## 🛠️ YOUR TOOL
 
 **write_code(path, content)**: Write your React component. This auto-completes the task.
@@ -624,11 +673,11 @@ export default function {component_name}() {{
 ## ⚠️ VALIDATION CHECKLIST
 
 Before calling write_code, verify your code:
-1. [ ] All image `src` URLs extracted from HTML exactly (keep original URLs)
-2. [ ] All link `href` URLs extracted from HTML exactly (keep original URLs)
+1. [ ] All image `src` URLs are kept exactly as they appear in the HTML (they are already absolute)
+2. [ ] All link `href` URLs are kept exactly as they appear in the HTML (they are already absolute)
 3. [ ] All text content matches HTML word-for-word
 4. [ ] No placeholder content added
-5. [ ] No URL modifications - use exact URLs from the HTML
+5. [ ] No made-up URLs - use only the URLs that appear in the provided HTML
 
 **IMPORTANT**: Call `write_code` with your COMPLETE React component code. This will write the file AND complete your task.
 
