@@ -1093,8 +1093,9 @@ class BoxLiteSandboxManager:
 
             async with async_playwright() as p:
                 browser = await p.chromium.launch(headless=True)
+                # Use smaller viewport for smaller screenshots
                 context = await browser.new_context(
-                    viewport={"width": 1280, "height": 720}
+                    viewport={"width": 1024, "height": 768}
                 )
                 page = await context.new_page()
 
@@ -1115,15 +1116,38 @@ class BoxLiteSandboxManager:
                         return document.querySelectorAll('*').length;
                     }''')
 
-                    # Take screenshot (JPEG for smaller size)
+                    # Take screenshot as PNG first (Playwright doesn't support JPEG resize well)
                     screenshot_bytes = await page.screenshot(
-                        type='jpeg',
-                        quality=70,  # Compress to reduce size
+                        type='png',
                         full_page=False  # Just viewport
                     )
+
+                    # Compress with Pillow (like Claude Code does)
+                    try:
+                        from PIL import Image
+                        import io
+
+                        img = Image.open(io.BytesIO(screenshot_bytes))
+
+                        # Resize to max 800px width (reduces tokens significantly)
+                        max_width = 800
+                        if img.width > max_width:
+                            ratio = max_width / img.width
+                            new_size = (max_width, int(img.height * ratio))
+                            img = img.resize(new_size, Image.LANCZOS)
+
+                        # Convert to JPEG with compression
+                        buffer = io.BytesIO()
+                        img.convert('RGB').save(buffer, format='JPEG', quality=60, optimize=True)
+                        screenshot_bytes = buffer.getvalue()
+
+                        logger.info(f"[Sandbox] Screenshot compressed with Pillow: {len(screenshot_bytes)} bytes")
+                    except ImportError:
+                        logger.warning("[Sandbox] Pillow not available, using raw PNG")
+
                     screenshot_base64 = base64.b64encode(screenshot_bytes).decode('utf-8')
 
-                    logger.info(f"[Sandbox] Screenshot captured: {len(screenshot_bytes)} bytes (JPEG q=70)")
+                    logger.info(f"[Sandbox] Screenshot captured: {len(screenshot_bytes)} bytes")
 
                 except Exception as e:
                     error = f"Failed to capture screenshot: {str(e)}"
