@@ -1115,14 +1115,15 @@ class BoxLiteSandboxManager:
                         return document.querySelectorAll('*').length;
                     }''')
 
-                    # Take screenshot
+                    # Take screenshot (JPEG for smaller size)
                     screenshot_bytes = await page.screenshot(
-                        type='png',
+                        type='jpeg',
+                        quality=70,  # Compress to reduce size
                         full_page=False  # Just viewport
                     )
                     screenshot_base64 = base64.b64encode(screenshot_bytes).decode('utf-8')
 
-                    logger.info(f"[Sandbox] Screenshot captured: {len(screenshot_bytes)} bytes")
+                    logger.info(f"[Sandbox] Screenshot captured: {len(screenshot_bytes)} bytes (JPEG q=70)")
 
                 except Exception as e:
                     error = f"Failed to capture screenshot: {str(e)}"

@@ -1042,12 +1042,12 @@ class BoxLiteMCPExecutor:
         summary = await self.sandbox.get_visual_summary()
 
         if summary.screenshot_base64:
-            # Return screenshot as image content
+            # Return screenshot as image content (JPEG for smaller size)
             return ({
                 "type": "image",
                 "source": {
                     "type": "base64",
-                    "media_type": "image/png",
+                    "media_type": "image/jpeg",
                     "data": summary.screenshot_base64,
                 }
             }, False)
@@ -1972,7 +1972,7 @@ a {
                 lines.append("### ✅ All Workers Completed Successfully!")
                 lines.append("")
                 lines.append("**Auto-generated files:**")
-                lines.append("- `/src/App.jsx` - Imports all section components")
+                lines.append("- `/src/App.jsx` - Basic layout (needs arrangement)")
                 lines.append("- `/src/index.css` - Global styles (imports original.css)")
                 if self._original_css:
                     lines.append(f"- `/src/styles/original.css` - Original website CSS ({len(self._original_css)} chars)")
@@ -1987,17 +1987,18 @@ a {
                     if dep_check_result.get("reinstalled"):
                         lines.append("**🔧 Dependencies reinstalled** (node_modules was corrupted)")
                         lines.append("")
-                if preview_url:
-                    lines.append(f"**Preview URL:** {preview_url}")
-                    lines.append("")
-                    lines.append("**The preview should now display the cloned website.**")
-                else:
-                    lines.append("**⚠️ Dev server may not be running. Use `shell('npm run dev', background=true)` to start it.**")
+
+                # CRITICAL: Prompt for layout-based arrangement
+                lines.append("### 📐 NEXT STEP REQUIRED: Arrange Layout")
                 lines.append("")
-                lines.append("If the preview doesn't look right, you can:")
-                lines.append("1. Use `diagnose_preview` to check for errors")
-                lines.append("2. Use `get_build_errors` to see any build issues")
-                lines.append("3. Manually edit specific section files if needed")
+                lines.append("The auto-generated App.jsx uses simple vertical stacking.")
+                lines.append("**You MUST now:**")
+                lines.append(f"1. Call `get_layout(source_id=\"{self._last_source_id}\")` to get position info")
+                lines.append("2. Rewrite `/src/App.jsx` based on section positions:")
+                lines.append("   - Sections with same Y but different X → put in same row (flex)")
+                lines.append("   - Use width ratios for flex proportions")
+                lines.append("3. Then check for errors with `get_build_errors()`")
+                lines.append("")
             else:
                 failed_sections = [wr.section_name for wr in result.worker_results if not wr.success]
                 lines.append(f"### ⚠️ {len(failed_sections)} Worker(s) Failed")
