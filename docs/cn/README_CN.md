@@ -196,7 +196,7 @@ https://github.com/user-attachments/assets/248af639-20d9-45a8-ad0a-660a04a17b68
 ### 克隆代理
 - **多代理架构** - 专业代理并行工作，实现更快、更准确的结果
 - **AI 代码生成** - Claude 根据提取数据生成生产就绪的代码
-- **实时预览** - 使用 WebContainer (StackBlitz) 实时预览代码
+- **实时预览** - 使用 BoxLite 沙箱实时预览代码
 - **框架支持** - 导出到 React、Next.js、Vue 或纯 HTML
 
 ### 多代理系统
@@ -353,7 +353,7 @@ nexting/
 | **前端** | Next.js 15, React 19, TailwindCSS 4, Shadcn/UI, Three.js |
 | **后端** | FastAPI, Python 3.11+, Playwright, WebSocket |
 | **AI** | Claude (Anthropic API), 多代理架构 |
-| **预览** | WebContainer (StackBlitz) |
+| **沙箱** | BoxLite |
 | **样式** | TailwindCSS, CSS 变量, 暗色模式支持 |
 
 ## 贡献

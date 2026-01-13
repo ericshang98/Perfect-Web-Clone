@@ -196,7 +196,7 @@ https://github.com/user-attachments/assets/248af639-20d9-45a8-ad0a-660a04a17b68
 ### クローンエージェント
 - **マルチエージェントアーキテクチャ** - 専門エージェントが並列で作業し、より高速で正確な結果を実現
 - **AIコード生成** - Claudeが抽出データから本番環境対応のコードを生成
-- **ライブプレビュー** - WebContainer（StackBlitz）によるリアルタイムコードプレビュー
+- **ライブプレビュー** - BoxLite サンドボックスによるリアルタイムコードプレビュー
 - **フレームワークサポート** - React、Next.js、Vue、またはプレーンHTMLにエクスポート
 
 ### マルチエージェントシステム
@@ -353,7 +353,7 @@ nexting/
 | **フロントエンド** | Next.js 15, React 19, TailwindCSS 4, Shadcn/UI, Three.js |
 | **バックエンド** | FastAPI, Python 3.11+, Playwright, WebSocket |
 | **AI** | Claude (Anthropic API), マルチエージェントアーキテクチャ |
-| **プレビュー** | WebContainer (StackBlitz) |
+| **サンドボックス** | BoxLite |
 | **スタイリング** | TailwindCSS, CSS変数, ダークモードサポート |
 
 ## コントリビューション

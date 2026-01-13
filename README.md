@@ -197,7 +197,7 @@ Most AI cloning tools look at your page like a picture and **guess** the code. W
 ### Clone Agent
 - **Multi-Agent Architecture** - Specialized agents work in parallel for faster, more accurate results
 - **AI Code Generation** - Claude generates production-ready code from extracted data
-- **Live Preview** - Real-time code preview with WebContainer (StackBlitz)
+- **Live Preview** - Real-time code preview with BoxLite sandbox
 - **Framework Support** - Export to React, Next.js, Vue, or plain HTML
 
 ### Multi-Agent System
@@ -357,7 +357,7 @@ nexting/
 | **Frontend** | Next.js 15, React 19, TailwindCSS 4, Shadcn/UI, Three.js |
 | **Backend** | FastAPI, Python 3.11+, Playwright, WebSocket |
 | **AI** | Claude (Anthropic API), Multi-Agent Architecture |
-| **Preview** | WebContainer (StackBlitz) |
+| **Sandbox** | BoxLite |
 | **Styling** | TailwindCSS, CSS Variables, Dark Mode Support |
 
 ## Contributing
@@ -369,6 +369,10 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 3. Commit your changes (`git commit -m 'Add amazing feature'`)
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
+
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=ericshang98/perfect-web-clone&type=Date)](https://star-history.com/#ericshang98/perfect-web-clone&Date)
 
 ## License
 
