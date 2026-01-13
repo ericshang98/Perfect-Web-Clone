@@ -107,8 +107,8 @@ const headerConfig: HeaderType = {
 const heroConfig: Section = {
   id: "hero",
   block: "hero-with-input",
-  title: "multi-agent for web cloning",
-  highlight_text: "multi-agent",
+  title: "Multi-Agent for Web Cloning",
+  highlight_text: "Multi-Agent",
   description:
     "Not just a wrapper around an LLM. Multi-agent collaboration with real tools, self-correction loops, and a complete sandbox environment to build production-ready code from scratch.",
   announcement: {

@@ -6,7 +6,7 @@
 
 *Webクローン向けのClaude Code。40以上の専門ツールを備えた垂直AIエージェント。*
 
-[English](../../README.md) | [中文](../cn/README_CN.md) | 日本語
+[English](../../README.md) | [中文](../cn/README_CN.md) | 日本語 | [한국어](../ko/README_KO.md) | [Español](../es/README_ES.md) | [Português](../pt/README_PT.md) | [Deutsch](../de/README_DE.md) | [Français](../fr/README_FR.md) | [Tiếng Việt](../vi/README_VI.md)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Next.js](https://img.shields.io/badge/Next.js-15.x-black)](https://nextjs.org/)

@@ -6,7 +6,7 @@
 
 *Claude Code for web cloning. A vertical AI agent with 40+ specialized tools.*
 
-English | [中文](./docs/cn/README_CN.md) | [日本語](./docs/ja/README_JA.md)
+English | [中文](./docs/cn/README_CN.md) | [日本語](./docs/ja/README_JA.md) | [한국어](./docs/ko/README_KO.md) | [Español](./docs/es/README_ES.md) | [Português](./docs/pt/README_PT.md) | [Deutsch](./docs/de/README_DE.md) | [Français](./docs/fr/README_FR.md) | [Tiếng Việt](./docs/vi/README_VI.md)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Next.js](https://img.shields.io/badge/Next.js-15.x-black)](https://nextjs.org/)

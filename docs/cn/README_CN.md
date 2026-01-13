@@ -6,7 +6,7 @@
 
 *网页克隆领域的 Claude Code。一个配备 40+ 专业工具的垂直 AI Agent。*
 
-[English](../../README.md) | 中文 | [日本語](../ja/README_JA.md)
+[English](../../README.md) | 中文 | [日本語](../ja/README_JA.md) | [한국어](../ko/README_KO.md) | [Español](../es/README_ES.md) | [Português](../pt/README_PT.md) | [Deutsch](../de/README_DE.md) | [Français](../fr/README_FR.md) | [Tiếng Việt](../vi/README_VI.md)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Next.js](https://img.shields.io/badge/Next.js-15.x-black)](https://nextjs.org/)
