@@ -51,16 +51,16 @@ We tried. Even with the **complete extracted JSON** — full DOM tree, all CSS r
 
 | Challenge | <img src="https://img.shields.io/badge/-Cursor-000?style=flat-square&logo=cursor" /> <img src="https://img.shields.io/badge/-Claude_Code-cc785c?style=flat-square&logo=anthropic" /> <img src="https://img.shields.io/badge/-Copilot-000?style=flat-square&logo=githubcopilot" /> | <img src="https://img.shields.io/badge/-Nexting-8B5CF6?style=flat-square" /> Multi-Agent |
 |-----------|-------------------------------|---------------------|
-| **50,000+ line DOM tree** | ❌ Context overflow, truncates critical parts | ✅ DOM Agent processes in chunks |
-| **3,000+ CSS rules** | ❌ Loses specificity, misses variables | ✅ Style Agent handles CSS separately |
-| **Component detection** | ❌ Guesses boundaries, creates monoliths | ✅ Dedicated agent identifies patterns |
+| **50,000+ line DOM tree** | ❌ Context overflow, truncates critical parts | ✅ Task distributed to worker agents |
+| **3,000+ CSS rules** | ❌ Loses specificity, misses variables | ✅ Parallel processing by workers |
+| **Component detection** | ❌ Guesses boundaries, creates monoliths | ✅ Structured workflow ensures consistency |
 | **Responsive breakpoints** | ❌ Often hardcodes single viewport | ✅ Extracts all media queries |
 | **Hover/animation states** | ❌ Cannot see, cannot reproduce | ✅ Browser automation captures all |
 | **Output quality** | ❌ "Close enough" approximation | ✅ Pixel-perfect, production-ready |
 
-> **The core problem**: A 200KB extracted JSON exceeds practical context limits. Even if it fits, the model can't maintain coherence across DOM→CSS→Components→Code. Each step needs focused attention.
+> **The core problem**: A 200KB extracted JSON exceeds practical context limits. Even if it fits, a single agent can't maintain coherence when context gets polluted with too much information. The solution isn't smarter agents — it's **task distribution** with reliable workflows.
 
-**Honest limitation**: Complex animations are still hard to extract perfectly — but that's a crawler problem, not an agent problem. The multi-agent architecture itself is capable of **far more than web cloning**. Imagine: automated refactoring, codebase migration, documentation generation, or any task that benefits from divide-and-conquer with specialized AI workers.
+**Honest limitation**: Complex animations are still hard to extract perfectly — but that's a crawler problem, not an agent problem. The multi-agent architecture itself is capable of **far more than web cloning**. Imagine: automated refactoring, codebase migration, documentation generation, or any task too large for a single agent to handle.
 
 ### The Agent + Tools + Sandbox Pattern
 
@@ -68,11 +68,19 @@ We tried. Even with the **complete extracted JSON** — full DOM tree, all CSS r
 ┌─────────────────────────────────────────────────────────┐
 │                    Multi-Agent System                    │
 ├─────────────────────────────────────────────────────────┤
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐     │
-│  │ DOM Agent   │  │ Style Agent │  │ Code Agent  │     │
-│  └──────┬──────┘  └──────┬──────┘  └──────┬──────┘     │
-│         │                │                │             │
+│                  ┌───────────────┐                      │
+│                  │  Main Agent   │                      │
+│                  │  (Coordinator)│                      │
+│                  └───────┬───────┘                      │
+│                          │ distributes tasks            │
+│         ┌────────────────┼────────────────┐             │
 │         ▼                ▼                ▼             │
+│  ┌───────────┐    ┌───────────┐    ┌───────────┐       │
+│  │  Worker   │    │  Worker   │    │  Worker   │  ...  │
+│  │  Agent 1  │    │  Agent 2  │    │  Agent N  │       │
+│  └─────┬─────┘    └─────┬─────┘    └─────┬─────┘       │
+│        └────────────────┼────────────────┘              │
+│                         ▼                               │
 │  ┌─────────────────────────────────────────────────┐   │
 │  │                    Tools                         │   │
 │  │  • File Operations  • Code Analysis             │   │
@@ -92,7 +100,8 @@ This pattern — **Agent + Tools + Sandbox** — is reusable for any AI agent pr
 
 | Component | Purpose | In Nexting |
 |-----------|---------|------------|
-| **Agents** | Specialized AI workers with focused responsibilities | DOM, Style, Component, Code agents |
+| **Main Agent** | Coordinates workflow and distributes tasks | Analyzes page, spawns workers, merges results |
+| **Worker Agents** | Execute subtasks with scoped permissions | Process sections in parallel, isolated context |
 | **Tools** | Capabilities agents can invoke | File I/O, Browser automation, API calls |
 | **Sandbox** | Safe execution environment | [BoxLite](https://github.com/boxlite-ai/boxlite) - Embedded micro-VM runtime |
 
@@ -202,14 +211,14 @@ Most AI cloning tools look at your page like a picture and **guess** the code. W
 
 ### Multi-Agent System
 
-Traditional single-model approaches fail on complex pages. Our multi-agent system breaks down the problem:
+Traditional single-model approaches fail on complex pages — not because the model isn't smart enough, but because the task is too large. Our multi-agent system solves this through **task distribution**:
 
 | Agent | Responsibility |
 |-------|----------------|
-| **DOM Structure Agent** | Handles massive, deeply nested DOM trees. Extracts semantic structure and component boundaries. |
-| **Style Analysis Agent** | Processes thousands of CSS rules. Captures computed styles, CSS variables, and breakpoints. |
-| **Component Detection Agent** | Identifies reusable patterns across the codebase for modular output. |
-| **Code Generation Agent** | Synthesizes all outputs into production-ready, framework-specific code. |
+| **Main Agent** | Analyzes the page, divides work into subtasks, spawns worker agents, and merges their outputs into coherent code. |
+| **Worker Agents** | Execute subtasks in parallel with isolated context. Each worker has scoped permissions and focused responsibility. |
+
+**Why this works**: Instead of one agent drowning in 200KB of context, workers each handle manageable chunks. The structured workflow prevents context pollution and ensures consistency across the final output.
 
 ## 🎬 Examples
 
