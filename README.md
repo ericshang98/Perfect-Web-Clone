@@ -153,32 +153,58 @@ Built on **[Claude Agent SDK](https://docs.anthropic.com/en/docs/agents-and-tool
 ### Design Philosophy
 
 ```
-┌────────────────────────────────────────────────────────────┐
-│                      Claude Agent SDK                       │
-│  ┌──────────────────────────────────────────────────────┐  │
-│  │                    Nexting Agent                      │  │
-│  │  ┌─────────┐  ┌─────────┐  ┌─────────┐  ┌─────────┐ │  │
-│  │  │ Planner │  │ Coder   │  │ Debugger│  │ Verifier│ │  │
-│  │  └────┬────┘  └────┬────┘  └────┬────┘  └────┬────┘ │  │
-│  │       └──────────┬─┴───────────┬┴────────────┘      │  │
-│  │                  ▼             ▼                     │  │
-│  │         ┌──────────────────────────────┐            │  │
-│  │         │      40+ Specialized Tools    │            │  │
-│  │         └──────────────┬───────────────┘            │  │
-│  └────────────────────────┼────────────────────────────┘  │
-│                           ▼                                │
-│  ┌──────────────────────────────────────────────────────┐  │
-│  │              BoxLite Sandbox (Micro-VM)              │  │
-│  │    Isolated environment for code execution & preview  │  │
-│  └──────────────────────────────────────────────────────┘  │
-└────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                         Frontend (localhost:3100)                            │
+│  ┌─────────────────┐   ┌─────────────────┐   ┌─────────────────────────┐   │
+│  │   Chat Panel    │   │    Code IDE     │   │        Preview          │   │
+│  │    (Agent)      │   │    (Monaco)     │   │       <iframe>          │   │
+│  └────────┬────────┘   └────────┬────────┘   │  src="localhost:8080"   │   │
+│           │ Agent              │ User        └────────────┬────────────┘   │
+│           │ writes code        │ writes code              │ loads directly │
+│           └─────────┬──────────┘                          │                │
+│                     ▼                                     │                │
+│  ┌──────────────────────────────────────┐                 │                │
+│  │           useBoxLite hook            │                 │                │
+│  │  writeFile(path, content)            │                 │                │
+│  │           ↓                          │                 │                │
+│  │  sendMessage({                       │                 │                │
+│  │    type: "write_file",               │                 │                │
+│  │    payload: { path, content }        │                 │                │
+│  │  })                                  │                 │                │
+│  └──────────────────┬───────────────────┘                 │                │
+└─────────────────────┼─────────────────────────────────────┼────────────────┘
+                      │ WebSocket :5100                     │ HTTP :8080
+                      ▼                                     │
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                         Backend (localhost:5100)                             │
+│  ┌──────────────────────────────────────┐                 │                │
+│  │       BoxLiteSandboxManager          │                 │                │
+│  │                                      │                 │                │
+│  │  write_file(path, content):          │                 │                │
+│  │           ↓                          │    File         │                │
+│  │  Writes to disk:                     │    Watcher      │                │
+│  │  /tmp/boxlite-sandboxes/             │        ↓        │                │
+│  │    {sandbox_id}/                     │                 │                │
+│  │      src/App.jsx                     │                 │                │
+│  │      src/main.jsx                    │                 │                │
+│  │      ...                             │                 │                │
+│  └──────────────────┬───────────────────┘                 │                │
+│                     │                                     │                │
+│                     ▼                                     ▼                │
+│  ┌──────────────────────────────────────────────────────────────────────┐  │
+│  │                      Vite Dev Server (npm run dev)                    │  │
+│  │  - Watches file changes                                              │  │
+│  │  - Auto HMR (Hot Module Replacement)                       WebSocket │  │
+│  │  - Port: 8080                                                  HMR ──┼──┘
+│  └──────────────────────────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────────────────────┘
 ```
 
 **What makes this different from ChatGPT/Claude chat?**
 - **Persistent state**: Agent remembers context across the entire session
 - **Tool chaining**: Can execute 10+ tools in sequence without human intervention
 - **Self-correction**: Detects errors, diagnoses root cause, fixes automatically
-- **Live preview**: Sees actual rendered output, not just code
+- **Live preview**: Sees actual rendered output via real Vite dev server, not just code
 
 ## Why Nexting?
 
