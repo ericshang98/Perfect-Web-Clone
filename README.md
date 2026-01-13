@@ -16,6 +16,8 @@ English | [中文](./docs/cn/README_CN.md) | [日本語](./docs/ja/README_JA.md)
 [![Playwright](https://img.shields.io/badge/Playwright-1.49+-2EAD33)](https://playwright.dev/)
 [![Claude](https://img.shields.io/badge/Claude-Anthropic-cc785c)](https://anthropic.com/)
 
+**Don't want to self-host?** Use the [Perfect Web Clone Skill](https://github.com/ericshang98/perfect-web-clone-skill) directly in Claude Code.
+
 </div>
 
 **A true AI agent** — not just a wrapper around an LLM. Multi-agent collaboration with real tools, self-correction loops, and a complete sandbox environment to build production-ready code from scratch.
