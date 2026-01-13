@@ -211,13 +211,34 @@ Traditional single-model approaches fail on complex pages. Our multi-agent syste
 | **Component Detection Agent** | Identifies reusable patterns across the codebase for modular output. |
 | **Code Generation Agent** | Synthesizes all outputs into production-ready, framework-specific code. |
 
-## Demo
+## 🎬 Examples
 
-<div align="center">
+### Did Global Cinema
+Film production company website clone
+
+| Original | Replica |
+|----------|---------|
+| <img src="docs/assets/examples/did-global-cinema-original.png" width="400" alt="Did Global Cinema Original"> | <img src="docs/assets/examples/did-global-cinema-replica.png" width="400" alt="Did Global Cinema Replica"> |
 
 https://github.com/user-attachments/assets/248af639-20d9-45a8-ad0a-660a04a17b68
 
-</div>
+---
+
+### Cake Equity
+Cap table & equity management platform clone
+
+| Original | Replica |
+|----------|---------|
+| <img src="docs/assets/examples/cake-equity-original.png" width="400" alt="Cake Equity Original"> | <img src="docs/assets/examples/cake-equity-replica.png" width="400" alt="Cake Equity Replica"> |
+
+---
+
+### Team&Tonic
+Brand agency website clone
+
+| Original | Replica |
+|----------|---------|
+| <img src="docs/assets/examples/team-and-tonic-original.png" width="400" alt="Team&Tonic Original"> | <img src="docs/assets/examples/team-and-tonic-replica.png" width="400" alt="Team&Tonic Replica"> |
 
 ## Getting Started
 
