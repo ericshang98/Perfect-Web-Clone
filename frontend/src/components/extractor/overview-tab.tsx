@@ -8,6 +8,10 @@ import {
   Box,
   FileCode,
   Image as ImageIcon,
+  Layout,
+  RefreshCw,
+  ArrowUpRight,
+  Lightbulb,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { PageMetadata, PageAssets } from "@/types/playwright";
@@ -243,6 +247,41 @@ export function OverviewTab({ metadata, screenshot, fullPageScreenshot, assets }
             </div>
           </div>
         )}
+
+        {/* Quick Tips */}
+        <div
+          className={cn(
+            "p-3 rounded-lg border",
+            "bg-gradient-to-br from-violet-50 to-indigo-50 dark:from-violet-950/30 dark:to-indigo-950/30",
+            "border-violet-200 dark:border-violet-800/50"
+          )}
+        >
+          <div className="flex items-center gap-1.5 mb-2">
+            <Lightbulb className="h-3.5 w-3.5 text-violet-600 dark:text-violet-400" />
+            <h4 className="text-xs font-medium text-violet-700 dark:text-violet-300">
+              Quick Tips
+            </h4>
+          </div>
+          <div className="space-y-2 text-[11px] text-neutral-600 dark:text-neutral-400">
+            <div className="flex items-start gap-2">
+              <Layout className="h-3.5 w-3.5 mt-0.5 text-blue-500 flex-shrink-0" />
+              <p>
+                Click <span className="font-medium text-neutral-800 dark:text-neutral-200">Layout</span> tab to view page sections. Re-analyze if needed.
+              </p>
+            </div>
+            <div className="flex items-start gap-2">
+              <ArrowUpRight className="h-3.5 w-3.5 mt-0.5 text-emerald-500 flex-shrink-0" />
+              <p>
+                Ready to clone? Click{" "}
+                <span className="inline-flex items-center gap-0.5 font-medium text-emerald-700 dark:text-emerald-400">
+                  Directly Clone
+                  <ArrowUpRight className="h-3 w-3" />
+                </span>{" "}
+                at top right.
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -37,3 +37,8 @@ boxlite-sandboxes/
 backend/data/sources/
 backend/data/checkpoints/
 backend/checkpoint/data/
+
+# Exception: Gallery demo checkpoints (needed for showcase feature)
+!backend/data/checkpoints/did-global-cinema-aaf71f95/
+!backend/data/checkpoints/cake-equity-|-cap-table-and-eq-c18b9b37/
+!backend/data/checkpoints/team&tonic-82630039/

@@ -1,0 +1,16 @@
+{
+  "id": "cake-equity-|-cap-table-and-eq-c18b9b37",
+  "name": "Cake Equity | Cap Table and Equity Management Software for Startups",
+  "description": "",
+  "source_id": "2e9032bc-6dea-4ecb-b87f-68188abd6aa6",
+  "source_url": "https://www.cakeequity.com",
+  "thumbnail": null,
+  "is_showcase": false,
+  "created_at": 1768230642.1247911,
+  "updated_at": 1768230874.976265,
+  "checkpoints": [
+    "cp_001",
+    "cp_002"
+  ],
+  "current_checkpoint": "cp_002"
+}

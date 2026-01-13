@@ -108,6 +108,11 @@ export function useBoxLite(options: UseBoxLiteOptions = {}): UseBoxLiteReturn {
     setAgentLogs([]);
   }, []);
 
+  // Restore agent logs from checkpoint
+  const restoreAgentLogs = useCallback((logs: AgentLogEntry[]) => {
+    setAgentLogs(logs);
+  }, []);
+
   // ============================================
   // WebSocket Management
   // ============================================
@@ -845,6 +850,7 @@ export function useBoxLite(options: UseBoxLiteOptions = {}): UseBoxLiteReturn {
     agentLogs,
     addAgentLog,
     clearAgentLogs,
+    restoreAgentLogs,
 
     // File diffs
     fileDiffs,

@@ -25,13 +25,13 @@ export async function generateProjectName(userMessage: string): Promise<string> 
 
     if (!response.ok) {
       console.error("[ProjectNaming] API error:", response.status);
-      return "Untitled Project";
+      return "";
     }
 
     const data = await response.json();
-    return data.name || "Untitled Project";
+    return data.name || "";
   } catch (error) {
     console.error("[ProjectNaming] Failed to generate name:", error);
-    return "Untitled Project";
+    return "";
   }
 }

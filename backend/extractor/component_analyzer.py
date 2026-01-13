@@ -844,6 +844,7 @@ class ComponentAnalyzer:
         """为每个Section创建ComponentInfo对象"""
         components = []
         used_ranges: List[Tuple[int, int]] = []  # 跟踪已分配的字符范围
+        html_fingerprints: Dict[str, str] = {}  # Track HTML fingerprints to detect duplicates
 
         for idx, section in enumerate(sections):
             try:
@@ -856,6 +857,19 @@ class ComponentAnalyzer:
                     html_content = await self._get_section_html(section['selector'], section_rect)
                     # 清理 HTML：移除 base64 图片、SVG、超长样式等
                     cleaned_html = clean_html_for_tokens(html_content)
+
+                    # DEBUG: Check for duplicate HTML at extraction time
+                    if html_content:
+                        fingerprint = html_content[:200]  # First 200 chars as fingerprint
+                        if fingerprint in html_fingerprints:
+                            logger.warning(
+                                f"[_create_component_infos] DUPLICATE HTML detected at extraction!\n"
+                                f"  Section idx={idx}, selector='{section['selector']}', rect.y={section_rect.get('y')}\n"
+                                f"  Duplicate of: {html_fingerprints[fingerprint]}\n"
+                                f"  HTML preview: {fingerprint[:80]}..."
+                            )
+                        else:
+                            html_fingerprints[fingerprint] = f"idx={idx}, selector='{section['selector']}'"
 
                 # 计算在原始HTML中的字符位置（传入已使用的范围避免重复）
                 char_start, char_end = self._find_html_position_in_raw(
@@ -1071,39 +1085,90 @@ class ComponentAnalyzer:
         # 策略1: 使用 querySelectorAll + rect 位置匹配
         if rect and rect.get('y') is not None:
             try:
-                html = await self.page.evaluate('''
+                result = await self.page.evaluate('''
                     (params) => {
                         try {
                             const { selector, targetY, tolerance } = params;
                             const elements = document.querySelectorAll(selector);
-                            if (elements.length === 0) return '';
-                            if (elements.length === 1) return elements[0].outerHTML;
+
+                            // Debug info
+                            const debug = {
+                                selector: selector,
+                                targetY: targetY,
+                                elementCount: elements.length,
+                                candidates: []
+                            };
+
+                            if (elements.length === 0) return { html: '', debug };
+                            if (elements.length === 1) {
+                                const el = elements[0];
+                                const rect = el.getBoundingClientRect();
+                                const scrollY = window.scrollY || document.documentElement.scrollTop;
+                                debug.candidates.push({
+                                    y: rect.top + scrollY,
+                                    distance: 0,
+                                    selected: true
+                                });
+                                return { html: el.outerHTML, debug };
+                            }
 
                             // Find element closest to target Y position
                             let bestMatch = null;
                             let bestDistance = Infinity;
+                            let bestIndex = -1;
 
-                            for (const el of elements) {
+                            for (let i = 0; i < elements.length; i++) {
+                                const el = elements[i];
                                 const rect = el.getBoundingClientRect();
                                 const scrollY = window.scrollY || document.documentElement.scrollTop;
                                 const elY = rect.top + scrollY;
                                 const distance = Math.abs(elY - targetY);
 
+                                debug.candidates.push({
+                                    index: i,
+                                    y: elY,
+                                    distance: distance,
+                                    selected: false
+                                });
+
                                 if (distance < bestDistance) {
                                     bestDistance = distance;
                                     bestMatch = el;
+                                    bestIndex = i;
                                 }
                             }
 
-                            return bestMatch ? bestMatch.outerHTML : '';
+                            // Mark selected
+                            if (bestIndex >= 0 && debug.candidates[bestIndex]) {
+                                debug.candidates[bestIndex].selected = true;
+                            }
+
+                            return { html: bestMatch ? bestMatch.outerHTML : '', debug };
                         } catch (e) {
-                            return '';
+                            return { html: '', debug: { error: e.toString() } };
                         }
                     }
                 ''', {"selector": selector, "targetY": rect.get('y', 0), "tolerance": 50})
-                if html:
-                    return html
-            except:
+
+                if result and isinstance(result, dict):
+                    html = result.get('html', '')
+                    debug = result.get('debug', {})
+
+                    # Log debug info
+                    element_count = debug.get('elementCount', 0)
+                    if element_count > 1:
+                        candidates = debug.get('candidates', [])
+                        selected = [c for c in candidates if c.get('selected')]
+                        logger.info(
+                            f"[_get_section_html] Multiple elements for '{selector}': "
+                            f"count={element_count}, targetY={debug.get('targetY')}, "
+                            f"selected y={selected[0].get('y') if selected else 'none'}"
+                        )
+
+                    if html:
+                        return html
+            except Exception as e:
+                logger.warning(f"[_get_section_html] Strategy 1 failed for '{selector}': {e}")
                 pass
 
         # 策略2: 精确选择器（回退）

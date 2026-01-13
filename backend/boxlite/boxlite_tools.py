@@ -942,6 +942,72 @@ async def get_visual_summary(
     )
 
 
+async def take_screenshot(
+    sandbox: BoxLiteSandboxManager,
+    selector: str = None,
+    full_page: bool = False,
+) -> ToolResult:
+    """
+    Take screenshot of preview page.
+
+    Args:
+        sandbox: Sandbox manager instance
+        selector: Optional CSS selector to screenshot specific element
+        full_page: Whether to capture full page (default: False)
+
+    Returns:
+        ToolResult with screenshot image or text summary
+    """
+    summary = await sandbox.get_visual_summary()
+
+    if summary.screenshot_base64:
+        # Check size - if base64 is too large (>100KB), return text description instead
+        base64_size = len(summary.screenshot_base64)
+        if base64_size > 100000:  # 100KB limit
+            lines = ["## Visual Summary (Image too large for context)"]
+            lines.append(f"Screenshot size: {base64_size} bytes (exceeds 100KB limit)")
+            lines.append(f"Preview URL: {summary.preview_url or 'Not available'}")
+            if summary.page_title:
+                lines.append(f"Page Title: {summary.page_title}")
+            lines.append(f"Elements visible: {summary.visible_element_count or 'Unknown'}")
+            if summary.visible_text:
+                lines.append(f"\nVisible Text:\n{summary.visible_text[:500]}")
+            lines.append("\n✓ Preview is rendering - image was captured but too large to display")
+            return ToolResult(
+                success=True,
+                result="\n".join(lines),
+            )
+
+        # Return screenshot as image content
+        # Must be a LIST of content blocks for Bedrock API compatibility
+        return ToolResult(
+            success=True,
+            result=[{
+                "type": "image",
+                "source": {
+                    "type": "base64",
+                    "media_type": "image/jpeg",
+                    "data": summary.screenshot_base64,
+                }
+            }],
+        )
+    else:
+        # No screenshot available, return text summary
+        lines = ["## Visual Summary (Screenshot not available)"]
+        lines.append(f"Preview URL: {summary.preview_url or 'Not available'}")
+        if summary.page_title:
+            lines.append(f"Page Title: {summary.page_title}")
+        if summary.visible_text:
+            lines.append(f"\nVisible Text:\n{summary.visible_text[:1000]}")
+        if summary.error:
+            lines.append(f"\nError: {summary.error}")
+
+        return ToolResult(
+            success=False,
+            result="\n".join(lines),
+        )
+
+
 # ============================================
 # Tool Registry
 # ============================================
@@ -973,6 +1039,7 @@ ALL_TOOLS = {
     "verify_changes": verify_changes,
     "get_build_errors": get_build_errors,
     "get_visual_summary": get_visual_summary,
+    "take_screenshot": take_screenshot,
 }
 
 
@@ -1179,6 +1246,24 @@ Use this for:
             "input_schema": {
                 "type": "object",
                 "properties": {},
+                "required": []
+            }
+        },
+        {
+            "name": "take_screenshot",
+            "description": "Take a screenshot of the preview page. Returns the image for visual verification. Use this to verify the page looks correct after making changes.",
+            "input_schema": {
+                "type": "object",
+                "properties": {
+                    "selector": {
+                        "type": "string",
+                        "description": "Optional CSS selector to screenshot specific element"
+                    },
+                    "full_page": {
+                        "type": "boolean",
+                        "description": "Whether to capture full page (default: false)"
+                    }
+                },
                 "required": []
             }
         },

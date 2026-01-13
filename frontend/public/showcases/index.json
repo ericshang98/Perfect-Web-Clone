@@ -1,42 +1,54 @@
 {
   "showcases": [
     {
-      "id": "stripe-clone",
-      "name": "Stripe Homepage",
-      "description": "A pixel-perfect clone of Stripe's landing page with animated gradients and responsive layout.",
-      "source_url": "https://stripe.com",
-      "preview_image": "/showcases/stripe-clone/preview.png",
-      "created_at": "2025-01-08",
+      "id": "did-global-cinema",
+      "name": "Did Global Cinema",
+      "description": "Film production company website - Click to run live demo",
+      "source_url": "https://www.dg-cinema.com/en",
+      "preview_image": "/showcases/did-global-cinema/website.png",
+      "created_at": "2025-01-12",
       "stats": {
-        "sections": 6,
-        "files": 12,
-        "duration_seconds": 45
+        "sections": 8,
+        "files": 15,
+        "duration_seconds": 63
+      },
+      "checkpoint": {
+        "project_id": "did-global-cinema-aaf71f95",
+        "checkpoint_id": "cp_005"
       }
     },
     {
-      "id": "linear-clone",
-      "name": "Linear App",
-      "description": "Clean recreation of Linear's modern SaaS landing page with smooth animations.",
-      "source_url": "https://linear.app",
-      "preview_image": "/showcases/linear-clone/preview.png",
-      "created_at": "2025-01-07",
+      "id": "cake-equity",
+      "name": "Cake Equity",
+      "description": "Cap table & equity management - Click to run live demo",
+      "source_url": "https://www.cakeequity.com",
+      "preview_image": "/showcases/cake-equity/website.png",
+      "created_at": "2025-01-11",
       "stats": {
-        "sections": 5,
-        "files": 10,
-        "duration_seconds": 38
+        "sections": 12,
+        "files": 18,
+        "duration_seconds": 75
+      },
+      "checkpoint": {
+        "project_id": "cake-equity-|-cap-table-and-eq-c18b9b37",
+        "checkpoint_id": "cp_002"
       }
     },
     {
-      "id": "vercel-clone",
-      "name": "Vercel Homepage",
-      "description": "Faithful reproduction of Vercel's developer-focused landing page.",
-      "source_url": "https://vercel.com",
-      "preview_image": "/showcases/vercel-clone/preview.png",
-      "created_at": "2025-01-06",
+      "id": "team-and-tonic",
+      "name": "Team&Tonic",
+      "description": "Brand agency website - Click to run live demo",
+      "source_url": "https://www.teamandtonic.com",
+      "preview_image": "/showcases/team-and-tonic/website.png",
+      "created_at": "2025-01-10",
       "stats": {
-        "sections": 7,
-        "files": 14,
-        "duration_seconds": 52
+        "sections": 19,
+        "files": 22,
+        "duration_seconds": 82
+      },
+      "checkpoint": {
+        "project_id": "team&tonic-82630039",
+        "checkpoint_id": "cp_003"
       }
     }
   ]

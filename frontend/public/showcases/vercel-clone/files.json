@@ -1,6 +1,0 @@
-{
-  "files": {
-    "/src/App.jsx": "import './App.css'\n\nexport default function App() {\n  return (\n    <div className=\"app dark-theme\">\n      <h1>Vercel Clone</h1>\n      <p>Develop. Preview. Ship.</p>\n    </div>\n  )\n}",
-    "/package.json": "{\n  \"name\": \"vercel-clone\",\n  \"private\": true,\n  \"type\": \"module\"\n}"
-  }
-}

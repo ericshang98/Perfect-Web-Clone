@@ -393,6 +393,19 @@ This tool is ONLY for:
         "name": "spawn_section_workers",
         "description": """⭐⭐ MANDATORY - Must call immediately after get_layout()!
 
+⛔⛔⛔ CRITICAL WARNING: THIS TOOL CAN ONLY BE CALLED **ONCE** PER SOURCE! ⛔⛔⛔
+
+If you call this tool again after it has already run, it will be BLOCKED.
+Repeated calls would cause workers to overwrite existing files.
+
+**If you already called this tool:**
+- Use `edit_file()` or `write_file()` to fix specific issues
+- Use `diagnose_preview_state()` to check for errors
+- Use `retry_failed_sections()` to retry only failed workers
+- DO NOT call spawn_section_workers again!
+
+---
+
 This tool spawns parallel Worker Agents to write ALL section components.
 You (Main Agent) should NOT write section components yourself.
 
@@ -411,7 +424,7 @@ The section_name MUST match get_layout() output for data to be passed correctly!
 
 ## Workflow:
 1. get_layout() → returns section_configs with section_name values
-2. spawn_section_workers(sections=section_configs) ← COPY section_name EXACTLY
+2. spawn_section_workers(sections=section_configs) ← COPY section_name EXACTLY  **[ONE TIME ONLY!]**
 3. [WAIT for workers to complete]
 4. Write App.jsx, index.css (use templates from get_layout)
 
@@ -423,7 +436,8 @@ The section_name MUST match get_layout() output for data to be passed correctly!
 ⛔ DO NOT skip this step!
 ⛔ DO NOT write section components yourself!
 ⛔ DO NOT invent section names - use get_layout() names!
-⛔ DO NOT write App.jsx before calling this!""",
+⛔ DO NOT write App.jsx before calling this!
+⛔ DO NOT call this tool more than ONCE per source!""",
         "input_schema": {
             "type": "object",
             "properties": {

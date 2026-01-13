@@ -28,11 +28,6 @@ GEMINI_PROXY_API_KEY = os.getenv("GEMINI_PROXY_API_KEY", "")
 GEMINI_PROXY_BASE_URL = os.getenv("GEMINI_PROXY_BASE_URL", "")
 GEMINI_PROXY_MODEL = os.getenv("GEMINI_PROXY_MODEL", "gemini-1.5-flash")
 
-# ==================== AI Divider Configuration ====================
-# AI 分区服务配置
-
-AI_DIVIDER_PROVIDER = os.getenv("AI_DIVIDER_PROVIDER", "claude")  # "gemini" or "claude"
-
 # ==================== Server Configuration ====================
 # 服务器配置
 

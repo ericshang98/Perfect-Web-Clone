@@ -12,7 +12,6 @@ import {
   Palette,
   FolderOpen,
   Download,
-  Sparkles,
   Database,
   CheckCircle,
   Code2,
@@ -21,7 +20,11 @@ import {
   Save,
   Boxes,
   Cpu,
-  Copy,
+  Lock,
+  ArrowRight,
+  Lightbulb,
+  ArrowUpRight,
+  Key,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -42,7 +45,8 @@ import {
   ComponentsTab,
   ThemeSelectModal,
   ThemeToggleButton,
-  AIDivTab,
+  CloneModeToggle,
+  type CloneMode,
 } from "@/components/extractor";
 
 // API and types
@@ -53,7 +57,6 @@ import {
   type ExtractionStatusResponse,
 } from "@/lib/api/extractor";
 import { saveToSources } from "@/lib/api/sources";
-import { generateAIJson } from "@/lib/ai-json-generator";
 import type {
   ExtractionResult,
   ExtractionStatus,
@@ -63,7 +66,6 @@ import type {
   ThemeMode,
   ThemeDetectionResult,
   ThemedData,
-  AIDivisionResult,
 } from "@/types/extractor";
 
 /**
@@ -90,8 +92,6 @@ const TABS: {
 }[] = [
   { id: "overview", label: "Overview", icon: Eye },
   { id: "layout", label: "Layout", icon: Layout },
-  // AI 智能分区
-  { id: "ai-div", label: "AI Div", icon: Sparkles },
   { id: "elements", label: "Elements", icon: Layers },
   { id: "styles", label: "Styles", icon: Palette },
   { id: "assets", label: "Assets", icon: FolderOpen },
@@ -158,11 +158,11 @@ export function PlaywrightPage() {
   // Theme selection modal state (主题选择弹框状态)
   const [themeModalOpen, setThemeModalOpen] = useState(false);
   const [pendingExportAction, setPendingExportAction] = useState<
-    "cache" | "ai-json" | "raw" | "directly-clone" | null
+    "cache" | "raw" | "directly-clone" | null
   >(null);
 
-  // AI Division cache state (AI 分区结果缓存)
-  const [aiDivisionResult, setAiDivisionResult] = useState<AIDivisionResult | null>(null);
+  // Clone mode state (克隆模式状态)
+  const [cloneMode, setCloneMode] = useState<CloneMode>("full-page");
 
   /**
    * 处理提取请求（分阶段加载）
@@ -179,7 +179,6 @@ export function PlaywrightPage() {
       setSelectedComponent(null);
       setRagStoreSuccess(false);
       setAgentStoreSuccess(false);
-      setAiDivisionResult(null); // 清除 AI 分区缓存
       setCurrentUrl(url);
       setLoadingPhase("quick");
       setProgress(0);
@@ -355,29 +354,6 @@ export function PlaywrightPage() {
     link.download = `playwright-extract-${Date.now()}.json`;
     link.click();
     URL.revokeObjectURL(url);
-  }, [result]);
-
-  /**
-   * 导出 AI JSON
-   * 生成模块化的 RAG 友好数据格式
-   */
-  const handleExportAIJson = useCallback(() => {
-    if (!result) return;
-
-    try {
-      const aiJson = generateAIJson(result);
-      const blob = new Blob([JSON.stringify(aiJson, null, 2)], {
-        type: "application/json",
-      });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `ai-components-${Date.now()}.json`;
-      link.click();
-      URL.revokeObjectURL(url);
-    } catch (err) {
-      console.error("Failed to generate AI JSON:", err);
-    }
   }, [result]);
 
   /**
@@ -605,7 +581,7 @@ export function PlaywrightPage() {
         if (response.success && response.id) {
           console.log("[Sources] Saved for clone:", response.id);
           // Navigate to Agent page with source ID and theme
-          router.push(`/agent?source=${response.id}&theme=${theme}`);
+          router.push(`/agent?source=${response.id}&theme=${theme}&autoClone=true`);
         } else {
           console.error("[Directly Clone] Save failed:", response.error);
           alert("Failed to save to cache: " + (response.error || "Unknown error"));
@@ -619,29 +595,6 @@ export function PlaywrightPage() {
       // Note: Don't reset isDirectlyCloning here - we're navigating away
     },
     [currentUrl, router]
-  );
-
-  /**
-   * 带主题的 AI JSON 导出
-   */
-  const handleExportAIJsonWithTheme = useCallback(
-    (themedResult: ExtractionResult) => {
-      try {
-        const aiJson = generateAIJson(themedResult);
-        const blob = new Blob([JSON.stringify(aiJson, null, 2)], {
-          type: "application/json",
-        });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.href = url;
-        link.download = `ai-components-${themedResult.current_theme || "light"}-${Date.now()}.json`;
-        link.click();
-        URL.revokeObjectURL(url);
-      } catch (err) {
-        console.error("Failed to generate AI JSON:", err);
-      }
-    },
-    []
   );
 
   /**
@@ -666,16 +619,13 @@ export function PlaywrightPage() {
    * 执行实际的导出操作
    */
   const executeExportAction = useCallback(
-    (action: "cache" | "ai-json" | "raw" | "directly-clone", theme: ThemeMode) => {
+    (action: "cache" | "raw" | "directly-clone", theme: ThemeMode) => {
       const themedResult = getThemedResultForExport(theme);
       if (!themedResult) return;
 
       switch (action) {
         case "cache":
           handleSaveToCacheWithTheme(themedResult);
-          break;
-        case "ai-json":
-          handleExportAIJsonWithTheme(themedResult);
           break;
         case "raw":
           handleExportJSONWithTheme(themedResult);
@@ -688,7 +638,6 @@ export function PlaywrightPage() {
     [
       getThemedResultForExport,
       handleSaveToCacheWithTheme,
-      handleExportAIJsonWithTheme,
       handleExportJSONWithTheme,
       handleDirectlyClone,
     ]
@@ -699,7 +648,7 @@ export function PlaywrightPage() {
    * 如果支持双主题，弹出选择框；否则直接执行
    */
   const handleExportClick = useCallback(
-    (action: "cache" | "ai-json" | "raw" | "directly-clone") => {
+    (action: "cache" | "raw" | "directly-clone") => {
       if (hasDualThemeSupport) {
         // 双主题模式：弹出选择框
         setPendingExportAction(action);
@@ -784,19 +733,6 @@ export function PlaywrightPage() {
                     ? "Saved!"
                     : "Save to Cache"}
                 </button>
-                {/* Export AI JSON */}
-                <button
-                  onClick={() => handleExportClick("ai-json")}
-                  className={cn(
-                    "flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md",
-                    "bg-gradient-to-r from-blue-600 to-cyan-600 text-white",
-                    "hover:from-blue-700 hover:to-cyan-700",
-                    "transition-all shadow-sm"
-                  )}
-                >
-                  <Sparkles className="h-3.5 w-3.5" />
-                  AI JSON
-                </button>
                 {/* Export Raw JSON */}
                 <button
                   onClick={() => handleExportClick("raw")}
@@ -828,7 +764,7 @@ export function PlaywrightPage() {
                   {isDirectlyCloning ? (
                     <Loader2 className="h-3.5 w-3.5 animate-spin" />
                   ) : (
-                    <Copy className="h-3.5 w-3.5" />
+                    <ArrowRight className="h-3.5 w-3.5" />
                   )}
                   {isDirectlyCloning ? "Cloning..." : "Directly Clone"}
                 </button>
@@ -851,7 +787,15 @@ export function PlaywrightPage() {
 
         {/* Content - 与侧边栏背景一致 */}
         <div className="flex-1 overflow-auto p-4 md:p-6 bg-neutral-100 dark:bg-neutral-900">
-          <div className="max-w-6xl mx-auto space-y-4">
+          <div className={cn(
+            "mx-auto",
+            status === "success" && result ? "flex gap-6 max-w-7xl" : "max-w-6xl"
+          )}>
+            {/* Main Content */}
+            <div className={cn(
+              "space-y-4",
+              status === "success" && result ? "flex-1 min-w-0" : ""
+            )}>
             {/* URL Input Section - 卡片风格 */}
             <div
               className={cn(
@@ -941,22 +885,35 @@ export function PlaywrightPage() {
                   </div>
                 )}
 
+                {/* Clone Mode and Theme Toggle Control Bar - 独立的控制栏 */}
+                {result && (
+                  <div className="px-4 py-3 border-b border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800/50">
+                    <div className="flex items-center justify-between">
+                      {/* Left: Clone Mode Toggle */}
+                      <CloneModeToggle
+                        activeMode={cloneMode}
+                        onModeChange={setCloneMode}
+                      />
+
+                      {/* Right: Theme Toggle Button (only when dual theme is supported) */}
+                      {hasDualThemeSupport && (
+                        <ThemeToggleButton
+                          activeTheme={currentPreviewTheme}
+                          onThemeChange={handleThemePreviewChange}
+                        />
+                      )}
+                    </div>
+                  </div>
+                )}
+
                 <Tabs
                   value={activeTab}
                   onValueChange={(value) => setActiveTab(value as PlaywrightTab)}
                   className="w-full"
                 >
-                  {/* Tab Navigation - 与侧边栏风格一致 */}
+                  {/* Tab Navigation - Only show when Full Page mode */}
+                  {cloneMode === "full-page" && (
                   <div className="border-b border-neutral-200 dark:border-neutral-700 px-4 pt-3">
-                    {/* Theme Toggle Button (only when dual theme is supported) */}
-                    {result && hasDualThemeSupport && (
-                      <div className="mb-3 flex items-center justify-end">
-                        <ThemeToggleButton
-                          activeTheme={currentPreviewTheme}
-                          onThemeChange={handleThemePreviewChange}
-                        />
-                      </div>
-                    )}
                     <TabsList className="h-10 p-1 bg-neutral-100 dark:bg-neutral-700">
                       {TABS.map(({ id, label, icon: Icon }) => (
                         <TabsTrigger
@@ -970,8 +927,10 @@ export function PlaywrightPage() {
                       ))}
                     </TabsList>
                   </div>
+                  )}
 
-                  {/* Tab Contents */}
+                  {/* Tab Contents - Only show when Full Page mode */}
+                  {cloneMode === "full-page" && (
                   <div className="p-4">
                     {/* Overview Tab - Always available (quick phase) */}
                     {/* 使用主题感知数据：截图和资源会随主题变化 */}
@@ -999,19 +958,6 @@ export function PlaywrightPage() {
                           onSelectComponent={handleSelectComponent}
                         />
                       )}
-                    </TabsContent>
-
-                    {/* AI Div Tab - AI Smart Division */}
-                    <TabsContent value="ai-div" className="mt-0">
-                      <AIDivTab
-                        screenshot={themedScreenshot}
-                        fullPageScreenshot={themedFullPageScreenshot}
-                        domTree={result.dom_tree || null}
-                        metadata={result.metadata || null}
-                        url={currentUrl}
-                        cachedResult={aiDivisionResult}
-                        onResultChange={setAiDivisionResult}
-                      />
                     </TabsContent>
 
                     {/* Elements Tab - Needs DOM phase */}
@@ -1103,6 +1049,25 @@ export function PlaywrightPage() {
                       )}
                     </TabsContent>
                   </div>
+                  )}
+
+                  {/* Section Mode Placeholder - Show when Section mode */}
+                  {cloneMode === "section" && (
+                    <div className="p-8 text-center">
+                      <div className="flex flex-col items-center justify-center py-12">
+                        <div className="p-4 rounded-full bg-neutral-100 dark:bg-neutral-700 mb-4">
+                          <Lock className="h-8 w-8 text-neutral-400 dark:text-neutral-500" />
+                        </div>
+                        <p className="text-lg font-medium text-neutral-600 dark:text-neutral-300">
+                          Section Clone Mode
+                        </p>
+                        <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-2 max-w-md">
+                          This feature allows you to clone specific sections of a webpage.
+                          Coming soon in a future update.
+                        </p>
+                      </div>
+                    </div>
+                  )}
                 </Tabs>
               </div>
             )}
@@ -1132,6 +1097,79 @@ export function PlaywrightPage() {
                   from any webpage using Playwright
                 </p>
               </div>
+            )}
+            </div>
+
+            {/* Right Side Guide Panel - Only show when results are available */}
+            {status === "success" && result && (
+            <div className="hidden xl:block w-72 flex-shrink-0">
+              <div
+                className={cn(
+                  "sticky top-4 p-4 rounded-xl border",
+                  "bg-gradient-to-br from-violet-50 to-indigo-50 dark:from-violet-950/30 dark:to-indigo-950/30",
+                  "border-violet-200 dark:border-violet-800/50"
+                )}
+              >
+                <div className="flex items-center gap-2 mb-4">
+                  <Lightbulb className="h-4 w-4 text-violet-600 dark:text-violet-400" />
+                  <h3 className="text-sm font-semibold text-violet-800 dark:text-violet-300">
+                    Quick Guide
+                  </h3>
+                </div>
+
+                <div className="space-y-4 text-xs text-neutral-600 dark:text-neutral-400">
+                  {/* Layout Tip */}
+                  <div className="flex items-start gap-2.5">
+                    <div className="p-1.5 rounded-md bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 flex-shrink-0">
+                      <Layout className="h-3.5 w-3.5" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-neutral-800 dark:text-neutral-200 mb-0.5">
+                        View Page Structure
+                      </p>
+                      <p>
+                        Click <span className="font-semibold text-blue-600 dark:text-blue-400">Layout</span> tab to see how the page is divided into sections.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Directly Clone Tip */}
+                  <div className="flex items-start gap-2.5">
+                    <div className="p-1.5 rounded-md bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 flex-shrink-0">
+                      <ArrowUpRight className="h-3.5 w-3.5" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-neutral-800 dark:text-neutral-200 mb-0.5">
+                        Start Cloning
+                      </p>
+                      <p>
+                        Click{" "}
+                        <span className="inline-flex items-center gap-0.5 font-semibold text-emerald-600 dark:text-emerald-400">
+                          Directly Clone
+                          <ArrowUpRight className="h-3 w-3" />
+                        </span>{" "}
+                        at the top right to generate code.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* API Key Reminder */}
+                  <div className="flex items-start gap-2.5 pt-2 border-t border-violet-200/50 dark:border-violet-700/50">
+                    <div className="p-1.5 rounded-md bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400 flex-shrink-0">
+                      <Key className="h-3.5 w-3.5" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-neutral-800 dark:text-neutral-200 mb-0.5">
+                        API Key Required
+                      </p>
+                      <p>
+                        Make sure to configure your <span className="font-semibold text-amber-600 dark:text-amber-400">Claude API Key</span> in the backend <code className="text-[10px] bg-neutral-200 dark:bg-neutral-700 px-1 py-0.5 rounded">.env</code> file before cloning.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
             )}
           </div>
         </div>

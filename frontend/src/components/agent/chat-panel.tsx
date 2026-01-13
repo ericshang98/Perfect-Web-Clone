@@ -155,6 +155,22 @@ interface NextingAgentChatPanelProps {
    * Callback when project name is generated (for auto-naming)
    */
   onProjectNameGenerated?: (name: string) => void;
+  /**
+   * Auto-send a message on mount (for auto-clone flow)
+   */
+  autoSendMessage?: string;
+  /**
+   * Whether to trigger auto-send (controlled externally)
+   */
+  shouldAutoSend?: boolean;
+  /**
+   * Callback when auto-send is complete
+   */
+  onAutoSendComplete?: () => void;
+  /**
+   * Callback when backend triggers checkpoint save (frontend has full conversation data)
+   */
+  onTriggerCheckpointSave?: () => void;
 }
 
 // ============================================
@@ -1337,6 +1353,10 @@ export function NextingAgentChatPanel({
   boxliteState,
   onBoxLiteStateUpdate,
   onProjectNameGenerated,
+  autoSendMessage = "Copy this web for me",
+  shouldAutoSend = false,
+  onAutoSendComplete,
+  onTriggerCheckpointSave,
 }: NextingAgentChatPanelProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [currentTool, setCurrentTool] = useState<string | null>(null);
@@ -1364,12 +1384,16 @@ export function NextingAgentChatPanel({
   // Refs for BoxLite mode
   const boxliteStateRef = useRef(boxliteState);
   const onBoxLiteStateUpdateRef = useRef(onBoxLiteStateUpdate);
+  const onTriggerCheckpointSaveRef = useRef(onTriggerCheckpointSave);
   useEffect(() => {
     boxliteStateRef.current = boxliteState;
   }, [boxliteState]);
   useEffect(() => {
     onBoxLiteStateUpdateRef.current = onBoxLiteStateUpdate;
   }, [onBoxLiteStateUpdate]);
+  useEffect(() => {
+    onTriggerCheckpointSaveRef.current = onTriggerCheckpointSave;
+  }, [onTriggerCheckpointSave]);
 
   // Content blocks builder for streaming response
   const blocksBuilderRef = useRef<ContentBlock[]>([]);
@@ -1612,6 +1636,11 @@ export function NextingAgentChatPanel({
             currentMessageRef.current = null;
             setIsLoading(false);
             setCurrentTool(null);
+          },
+          // Checkpoint save trigger from backend
+          onTriggerCheckpointSave: (payload) => {
+            console.log("[Agent] Backend triggered checkpoint save, files:", payload.files_count);
+            onTriggerCheckpointSaveRef.current?.();
           },
           // Worker events (for future BoxLite Worker support)
           onWorkerSpawned: (payload) => {
@@ -2112,12 +2141,24 @@ export function NextingAgentChatPanel({
         const hasUserMessages = messages.some((m) => m.role === "user");
         if (!hasUserMessages) {
           namingTriggeredRef.current = true;
-          // Fire and forget - don't block the main flow
-          generateProjectName(content).then((name) => {
-            if (name && name !== "Untitled Project") {
-              onProjectNameGenerated(name);
-            }
-          });
+
+          // If we have a selected source, use its title directly
+          // 如果有选中的 source，直接使用其标题
+          if (selectedSource?.title && selectedSource.title !== "Untitled") {
+            // Extract domain or clean up title for project name
+            const cleanTitle = selectedSource.title
+              .replace(/\s*[|\-–—]\s*.+$/, "")  // Remove suffix like "| Company Name"
+              .trim()
+              .slice(0, 50);  // Limit length
+            onProjectNameGenerated(cleanTitle || selectedSource.title);
+          } else {
+            // Fire and forget - don't block the main flow
+            generateProjectName(content).then((name) => {
+              if (name) {
+                onProjectNameGenerated(name);
+              }
+            });
+          }
         }
       }
 
@@ -2192,8 +2233,26 @@ export function NextingAgentChatPanel({
     [messages, onMessagesChange, getWebContainerState, onClearFileDiffs, generateId, selectedSource, mode]
   );
 
+  // Auto-send message when shouldAutoSend becomes true
+  const autoSendTriggeredRef = useRef(false);
+  useEffect(() => {
+    if (
+      shouldAutoSend &&
+      !autoSendTriggeredRef.current &&
+      connectionState === "connected" &&
+      selectedSource &&
+      !isLoading
+    ) {
+      console.log("[AutoSend] Triggering auto-send:", autoSendMessage);
+      autoSendTriggeredRef.current = true;
+      handleSend(autoSendMessage);
+      onAutoSendComplete?.();
+    }
+  }, [shouldAutoSend, connectionState, selectedSource, isLoading, autoSendMessage, handleSend, onAutoSendComplete]);
+
   return (
     <div
+      data-testid="chat-panel"
       className={cn(
         "flex flex-col h-full",
         "bg-white dark:bg-black",

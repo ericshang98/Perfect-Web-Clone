@@ -41,6 +41,9 @@ from agent.agent_protocol import (
 # Memory cache for open-source version
 from cache.memory_store import extraction_cache
 
+# Tool invocation guard (prevents repeated tool calls)
+from .tool_guard import ToolInvocationGuard
+
 if TYPE_CHECKING:
     from .sandbox_manager import BoxLiteSandboxManager
 
@@ -89,6 +92,10 @@ class BoxLiteMCPExecutor:
 
         # Section tool executor (lazy initialized)
         self._section_executor = None
+
+        # Tool invocation guard - prevents repeated calls to single-use tools
+        # This is CRITICAL to prevent LLM from calling spawn_section_workers multiple times
+        self._tool_guard = ToolInvocationGuard()
 
         logger.info(f"BoxLiteMCPExecutor initialized: session={session_id}")
 
@@ -273,21 +280,37 @@ class BoxLiteMCPExecutor:
 
             # Parse result - support multiple return formats
             if isinstance(result, tuple) and len(result) == 2:
-                result_text, is_error = result
+                result_content, is_error = result
             elif isinstance(result, dict) and "result" in result:
-                result_text = result.get("result", "")
+                result_content = result.get("result", "")
                 is_error = result.get("is_error", False)
             else:
-                result_text = str(result) if result else ""
+                result_content = str(result) if result else ""
                 is_error = (
-                    result_text.startswith("Error:") or
-                    result_text.startswith("[ACTION_FAILED]")
+                    isinstance(result_content, str) and
+                    (result_content.startswith("Error:") or
+                     result_content.startswith("[ACTION_FAILED]"))
                 )
 
-            return {
-                "content": [{"type": "text", "text": result_text}],
-                "is_error": is_error,
-            }
+            # Handle different content types
+            # If result is an image dict, wrap it directly (don't convert to text)
+            if isinstance(result_content, dict) and result_content.get("type") == "image":
+                return {
+                    "content": [result_content],
+                    "is_error": is_error,
+                }
+            elif isinstance(result_content, list):
+                # Already a list of content blocks
+                return {
+                    "content": result_content,
+                    "is_error": is_error,
+                }
+            else:
+                # Text content
+                return {
+                    "content": [{"type": "text", "text": str(result_content)}],
+                    "is_error": is_error,
+                }
 
         except Exception as e:
             logger.error(f"[BoxLite] Tool execution error: {e}", exc_info=True)
@@ -1034,6 +1057,7 @@ class BoxLiteMCPExecutor:
         Take screenshot of preview.
 
         BoxLite uses Playwright for screenshots instead of frontend iframe.
+        Returns text summary (not image) to ensure compatibility with Claude API.
         """
         selector = input.get("selector")
         full_page = input.get("full_page", False)
@@ -1041,28 +1065,49 @@ class BoxLiteMCPExecutor:
         # Get visual summary (BoxLite uses Playwright)
         summary = await self.sandbox.get_visual_summary()
 
-        if summary.screenshot_base64:
-            # Return screenshot as image content (JPEG for smaller size)
-            return ({
-                "type": "image",
-                "source": {
-                    "type": "base64",
-                    "media_type": "image/jpeg",
-                    "data": summary.screenshot_base64,
-                }
-            }, False)
-        else:
-            # No screenshot available, return text summary
-            lines = ["## Visual Summary (Screenshot not available)"]
-            lines.append(f"Preview URL: {summary.preview_url or 'Not available'}")
-            if summary.page_title:
-                lines.append(f"Page Title: {summary.page_title}")
-            if summary.visible_text:
-                lines.append(f"\nVisible Text:\n{summary.visible_text[:1000]}")
-            if summary.error:
-                lines.append(f"\nError: {summary.error}")
+        lines = ["## Screenshot Result\n"]
 
-            return ("\n".join(lines), False)
+        if summary.screenshot_base64:
+            base64_size = len(summary.screenshot_base64)
+            logger.info(f"[Screenshot] Captured successfully: {base64_size} bytes")
+
+            lines.append("✅ **Screenshot captured successfully**")
+            lines.append(f"- Image size: {base64_size} bytes")
+            lines.append(f"- Preview URL: {summary.preview_url or 'Not available'}")
+
+            if summary.page_title:
+                lines.append(f"- Page Title: {summary.page_title}")
+
+            if summary.visible_element_count:
+                lines.append(f"- Elements rendered: {summary.visible_element_count}")
+
+            # Include visible text for context
+            if summary.visible_text:
+                text_preview = summary.visible_text[:800]
+                lines.append(f"\n### Visible Content:\n```\n{text_preview}\n```")
+
+            # Check for any errors in the page
+            if summary.error:
+                lines.append(f"\n⚠️ Page warning: {summary.error}")
+            else:
+                lines.append("\n✓ No visual errors detected - page is rendering correctly")
+
+        else:
+            # No screenshot available
+            lines.append("❌ **Screenshot not available**")
+            lines.append(f"- Preview URL: {summary.preview_url or 'Not available'}")
+
+            if summary.page_title:
+                lines.append(f"- Page Title: {summary.page_title}")
+
+            if summary.visible_text:
+                lines.append(f"\n### Page Content:\n{summary.visible_text[:1000]}")
+
+            if summary.error:
+                lines.append(f"\n❌ Error: {summary.error}")
+                lines.append("\n→ Please check if the preview server is running and there are no build errors")
+
+        return ("\n".join(lines), False)
 
     async def _execute_diagnose_preview_state(self, input: Dict[str, Any]) -> tuple:
         """
@@ -1600,8 +1645,23 @@ class BoxLiteMCPExecutor:
 
         This uses the layout from get_layout() to create workers
         for each section. Each worker receives its TaskContract data.
+
+        IMPORTANT: This tool can only be called ONCE per source.
+        Repeated calls are blocked to prevent file overwrites.
         """
         source_id = input.get("source_id", self._last_source_id)
+
+        # ============================================
+        # GUARD CHECK: Prevent repeated invocations
+        # ============================================
+        # Update guard's current source for proper scoping
+        if source_id:
+            self._tool_guard.set_current_source(source_id)
+
+        if not self._tool_guard.can_invoke("spawn_section_workers", source_id):
+            rejection_msg = self._tool_guard.get_rejection_message("spawn_section_workers")
+            logger.warning(f"[spawn_section_workers] BLOCKED: Tool already invoked for source {source_id}")
+            return (rejection_msg, True)
 
         if not self._last_layout_sections:
             # Try to get layout first
@@ -1671,6 +1731,21 @@ class BoxLiteMCPExecutor:
             logger.info(f"[spawn_section_workers] Starting worker_manager.run_workers()...")
             result = await worker_manager.run_workers(tasks)
             logger.info(f"[spawn_section_workers] run_workers() completed. Checking result...")
+
+            # ============================================
+            # GUARD MARK: Mark tool as invoked IMMEDIATELY after workers run
+            # This prevents repeat calls even if some workers failed
+            # ============================================
+            self._tool_guard.mark_invoked(
+                "spawn_section_workers",
+                source_id=source_id,
+                success=True,  # Tool itself succeeded, individual workers may have failed
+                metadata={
+                    "workers_count": len(tasks),
+                    "source_id": source_id,
+                }
+            )
+            logger.info(f"[spawn_section_workers] Tool marked as invoked for source {source_id}")
 
             # Store results for potential retry
             self._last_worker_results = {

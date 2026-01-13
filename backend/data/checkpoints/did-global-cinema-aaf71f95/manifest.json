@@ -1,0 +1,19 @@
+{
+  "id": "did-global-cinema-aaf71f95",
+  "name": "Did Global Cinema",
+  "description": "",
+  "source_id": "fbb83371-cb39-4182-a75c-bf05504577ce",
+  "source_url": "https://www.dg-cinema.com/en",
+  "thumbnail": null,
+  "is_showcase": false,
+  "created_at": 1768204907.1566021,
+  "updated_at": 1768212618.9960608,
+  "checkpoints": [
+    "cp_001",
+    "cp_002",
+    "cp_003",
+    "cp_004",
+    "cp_005"
+  ],
+  "current_checkpoint": "cp_005"
+}

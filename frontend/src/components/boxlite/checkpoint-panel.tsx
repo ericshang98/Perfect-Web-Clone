@@ -13,6 +13,10 @@ import {
   MessageSquare,
   FileText,
   History,
+  HardDrive,
+  ChevronDown,
+  ChevronRight,
+  FolderOpen,
 } from "lucide-react";
 
 // ============================================
@@ -26,7 +30,21 @@ export interface CheckpointSummary {
   created_at: string;
   conversation_count: number;
   files_count: number;
+  total_size: number;  // Size in bytes
   metadata: Record<string, unknown>;
+  // Added for all-checkpoints view
+  project_id?: string;
+  project_name?: string;
+  source_url?: string | null;
+}
+
+// Format bytes to human readable
+function formatBytes(bytes: number): string {
+  if (bytes === 0) return "0 B";
+  const k = 1024;
+  const sizes = ["B", "KB", "MB", "GB"];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + " " + sizes[i];
 }
 
 export interface ProjectSummary {
@@ -43,7 +61,7 @@ export interface ProjectSummary {
 
 interface CheckpointPanelProps {
   projectId?: string | null;
-  onRestoreCheckpoint?: (checkpointId: string) => void;
+  onRestoreCheckpoint?: (checkpointId: string, projectId: string) => void;
   onSaveCheckpoint?: () => void;
   disabled?: boolean;
   className?: string;
@@ -62,12 +80,14 @@ function CheckpointCard({
   onDelete,
   disabled = false,
   isDeleting = false,
+  showProjectName = false,
 }: {
   checkpoint: CheckpointSummary;
   onRestore: () => void;
   onDelete: () => void;
   disabled?: boolean;
   isDeleting?: boolean;
+  showProjectName?: boolean;
 }) {
   // Format date
   const formatDate = (dateStr: string) => {
@@ -162,14 +182,18 @@ function CheckpointCard({
       </div>
 
       {/* Meta info */}
-      <div className="flex items-center gap-3 mt-2 text-xs text-neutral-500 dark:text-neutral-400">
+      <div className="flex items-center flex-wrap gap-x-3 gap-y-1 mt-2 text-xs text-neutral-500 dark:text-neutral-400">
         <span className="flex items-center gap-1">
           <MessageSquare className="h-3 w-3" />
-          {checkpoint.conversation_count} messages
+          {checkpoint.conversation_count} msgs
         </span>
         <span className="flex items-center gap-1">
           <FileText className="h-3 w-3" />
           {checkpoint.files_count} files
+        </span>
+        <span className="flex items-center gap-1">
+          <HardDrive className="h-3 w-3" />
+          {formatBytes(checkpoint.total_size || 0)}
         </span>
       </div>
 
@@ -192,6 +216,75 @@ function CheckpointCard({
 }
 
 // ============================================
+// Project Group Component
+// ============================================
+
+function ProjectGroup({
+  projectId,
+  projectName,
+  checkpoints,
+  onRestore,
+  onDelete,
+  disabled,
+  deletingCheckpointId,
+  defaultExpanded = true,
+}: {
+  projectId: string;
+  projectName: string;
+  checkpoints: CheckpointSummary[];
+  onRestore: (checkpointId: string, projectId: string) => void;
+  onDelete: (checkpointId: string, projectId: string) => void;
+  disabled: boolean;
+  deletingCheckpointId: string | null;
+  defaultExpanded?: boolean;
+}) {
+  const [isExpanded, setIsExpanded] = useState(defaultExpanded);
+
+  return (
+    <div className="mb-4">
+      {/* Project Header */}
+      <button
+        onClick={() => setIsExpanded(!isExpanded)}
+        className={cn(
+          "w-full flex items-center gap-2 px-2 py-1.5 rounded-md transition-colors",
+          "hover:bg-neutral-100 dark:hover:bg-neutral-800",
+          "text-left"
+        )}
+      >
+        {isExpanded ? (
+          <ChevronDown className="h-4 w-4 text-neutral-400" />
+        ) : (
+          <ChevronRight className="h-4 w-4 text-neutral-400" />
+        )}
+        <FolderOpen className="h-4 w-4 text-amber-500" />
+        <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300 truncate flex-1">
+          {projectName}
+        </span>
+        <span className="text-xs text-neutral-400">
+          {checkpoints.length}
+        </span>
+      </button>
+
+      {/* Checkpoints */}
+      {isExpanded && (
+        <div className="ml-6 mt-2 space-y-2">
+          {checkpoints.map((checkpoint) => (
+            <CheckpointCard
+              key={checkpoint.id}
+              checkpoint={checkpoint}
+              onRestore={() => onRestore(checkpoint.id, projectId)}
+              onDelete={() => onDelete(checkpoint.id, projectId)}
+              disabled={disabled}
+              isDeleting={deletingCheckpointId === checkpoint.id}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ============================================
 // Main Checkpoint Panel Component
 // ============================================
 
@@ -207,25 +300,16 @@ export function CheckpointPanel({
   const [error, setError] = useState<string | null>(null);
   const [deletingCheckpointId, setDeletingCheckpointId] = useState<string | null>(null);
 
-  // Fetch checkpoints from API
+  // Fetch ALL checkpoints from ALL projects
   const fetchCheckpoints = useCallback(async () => {
-    if (!projectId) {
-      setCheckpoints([]);
-      return;
-    }
-
     setIsLoading(true);
     setError(null);
 
     try {
-      const response = await fetch(`${API_BASE}/api/checkpoints/projects/${projectId}/list`);
+      // Always fetch all checkpoints
+      const response = await fetch(`${API_BASE}/api/checkpoints/all`);
 
       if (!response.ok) {
-        if (response.status === 404) {
-          // Project doesn't exist yet, that's fine
-          setCheckpoints([]);
-          return;
-        }
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
@@ -241,23 +325,38 @@ export function CheckpointPanel({
     } finally {
       setIsLoading(false);
     }
-  }, [projectId]);
+  }, []);
 
-  // Load checkpoints when projectId changes
+  // Load checkpoints on mount
   useEffect(() => {
     fetchCheckpoints();
   }, [fetchCheckpoints]);
 
+  // Group checkpoints by project
+  const groupedCheckpoints = React.useMemo(() => {
+    const groups: Record<string, { name: string; checkpoints: CheckpointSummary[] }> = {};
+
+    for (const cp of checkpoints) {
+      const pid = cp.project_id || "unknown";
+      const pname = cp.project_name || "Unknown Project";
+
+      if (!groups[pid]) {
+        groups[pid] = { name: pname, checkpoints: [] };
+      }
+      groups[pid].checkpoints.push(cp);
+    }
+
+    return groups;
+  }, [checkpoints]);
+
   // Handle checkpoint deletion
   const handleDeleteCheckpoint = useCallback(
-    async (checkpointId: string) => {
-      if (!projectId) return;
-
+    async (checkpointId: string, cpProjectId: string) => {
       setDeletingCheckpointId(checkpointId);
 
       try {
         const response = await fetch(
-          `${API_BASE}/api/checkpoints/projects/${projectId}/${checkpointId}`,
+          `${API_BASE}/api/checkpoints/projects/${cpProjectId}/${checkpointId}`,
           { method: "DELETE" }
         );
 
@@ -277,13 +376,16 @@ export function CheckpointPanel({
         setDeletingCheckpointId(null);
       }
     },
-    [projectId]
+    []
   );
 
   // Handle restore
-  const handleRestore = (checkpointId: string) => {
-    onRestoreCheckpoint?.(checkpointId);
+  const handleRestore = (checkpointId: string, cpProjectId: string) => {
+    onRestoreCheckpoint?.(checkpointId, cpProjectId);
   };
+
+  const totalCheckpoints = checkpoints.length;
+  const projectCount = Object.keys(groupedCheckpoints).length;
 
   return (
     <div
@@ -310,26 +412,46 @@ export function CheckpointPanel({
               Checkpoints
             </h2>
             <p className="text-xs text-neutral-500 dark:text-neutral-400">
-              {checkpoints.length} saved state{checkpoints.length !== 1 ? "s" : ""}
+              {totalCheckpoints} saved in {projectCount} project{projectCount !== 1 ? "s" : ""}
             </p>
           </div>
         </div>
-        <button
-          onClick={fetchCheckpoints}
-          disabled={isLoading}
-          className={cn(
-            "p-2 rounded-lg transition-colors",
-            "text-neutral-500 dark:text-neutral-400",
-            "hover:bg-neutral-100 dark:hover:bg-neutral-800",
-            "disabled:opacity-50"
+        <div className="flex items-center gap-1">
+          {/* Add Checkpoint Button */}
+          {onSaveCheckpoint && projectId && (
+            <button
+              onClick={onSaveCheckpoint}
+              disabled={disabled}
+              title="Save checkpoint"
+              className={cn(
+                "p-2 rounded-lg transition-colors",
+                "text-amber-600 dark:text-amber-400",
+                "hover:bg-amber-100 dark:hover:bg-amber-900/40",
+                "disabled:opacity-50"
+              )}
+            >
+              <Save className="h-4 w-4" />
+            </button>
           )}
-        >
-          {isLoading ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <RefreshCw className="h-4 w-4" />
-          )}
-        </button>
+          {/* Refresh Button */}
+          <button
+            onClick={fetchCheckpoints}
+            disabled={isLoading}
+            title="Refresh checkpoints"
+            className={cn(
+              "p-2 rounded-lg transition-colors",
+              "text-neutral-500 dark:text-neutral-400",
+              "hover:bg-neutral-100 dark:hover:bg-neutral-800",
+              "disabled:opacity-50"
+            )}
+          >
+            {isLoading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <RefreshCw className="h-4 w-4" />
+            )}
+          </button>
+        </div>
       </div>
 
       {/* Save Checkpoint Button */}
@@ -353,19 +475,7 @@ export function CheckpointPanel({
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto p-3">
-        {!projectId ? (
-          <div className="flex flex-col items-center justify-center h-full text-center p-4">
-            <div className="w-12 h-12 rounded-full bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center mb-3">
-              <History className="h-6 w-6 text-neutral-400" />
-            </div>
-            <h3 className="text-sm font-medium text-neutral-900 dark:text-white mb-1">
-              No project active
-            </h3>
-            <p className="text-xs text-neutral-500 dark:text-neutral-400">
-              Start a clone project to enable checkpoints.
-            </p>
-          </div>
-        ) : isLoading && checkpoints.length === 0 ? (
+        {isLoading && checkpoints.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center">
             <Loader2 className="h-8 w-8 animate-spin text-neutral-400 mb-2" />
             <p className="text-sm text-neutral-500 dark:text-neutral-400">
@@ -405,15 +515,18 @@ export function CheckpointPanel({
             </p>
           </div>
         ) : (
-          <div className="space-y-2">
-            {checkpoints.map((checkpoint) => (
-              <CheckpointCard
-                key={checkpoint.id}
-                checkpoint={checkpoint}
-                onRestore={() => handleRestore(checkpoint.id)}
-                onDelete={() => handleDeleteCheckpoint(checkpoint.id)}
+          <div>
+            {Object.entries(groupedCheckpoints).map(([pid, group]) => (
+              <ProjectGroup
+                key={pid}
+                projectId={pid}
+                projectName={group.name}
+                checkpoints={group.checkpoints}
+                onRestore={handleRestore}
+                onDelete={handleDeleteCheckpoint}
                 disabled={disabled}
-                isDeleting={deletingCheckpointId === checkpoint.id}
+                deletingCheckpointId={deletingCheckpointId}
+                defaultExpanded={true}
               />
             ))}
           </div>
@@ -421,7 +534,7 @@ export function CheckpointPanel({
       </div>
 
       {/* Footer hint */}
-      {projectId && checkpoints.length > 0 && (
+      {checkpoints.length > 0 && (
         <div
           className={cn(
             "flex-shrink-0 px-4 py-2",

@@ -29,6 +29,9 @@ from agent.prompts import get_system_prompt
 from .boxlite_mcp_server import BoxLiteMCPServer, create_boxlite_mcp_server
 from .sandbox_manager import BoxLiteSandboxManager
 
+# Checkpoint module for auto-save
+from checkpoint import checkpoint_store
+
 logger = logging.getLogger(__name__)
 
 # Sources directory for loading source context
@@ -195,6 +198,11 @@ class BoxLiteClaudeAgent:
             config=self.config,
         )
 
+        # Checkpoint state for auto-save
+        self.current_project_id: Optional[str] = None
+        self.current_source_id: Optional[str] = None
+        self.current_source_url: Optional[str] = None
+
         logger.info(f"[BoxLite Agent] Initialized: session={session_id}")
 
     # ============================================
@@ -242,6 +250,10 @@ class BoxLiteClaudeAgent:
                     base_prompt = f"{base_prompt}\n\n{source_context}"
                     logger.info(f"[BoxLite Agent] Added source context ({len(source_context)} chars)")
 
+                # Store source info and create/get checkpoint project
+                self.current_source_id = selected_source_id
+                self._ensure_checkpoint_project(selected_source_id)
+
             # Add BoxLite-specific context
             boxlite_context = self._build_boxlite_context()
             system_prompt = self.memory.build_system_prompt(base_prompt + boxlite_context)
@@ -259,6 +271,16 @@ class BoxLiteClaudeAgent:
 
         finally:
             self.session.is_running = False
+
+            # Auto-save checkpoint on task completion
+            checkpoint_saved = await self._maybe_save_checkpoint()
+            if checkpoint_saved:
+                yield {
+                    "type": "checkpoint_saved",
+                    "project_id": self.current_project_id,
+                    "message": "Checkpoint saved automatically",
+                }
+
             yield {"type": "done"}
 
     def _build_boxlite_context(self) -> str:
@@ -488,22 +510,8 @@ When a user selects a source and asks you to clone it:
 
                 logger.info(f"[BoxLite Agent] Batch complete: {success_count} success, {failed_count} failed")
 
-                # If there were tool calls, MUST continue to let Claude analyze results
-                # This is critical for take_screenshot - Claude needs to analyze the image
-                # and report if there are any visual errors or issues
+                # If there were tool calls, continue to let Claude analyze results
                 if tool_use_blocks:
-                    # Check if any tool was take_screenshot - add analysis prompt
-                    has_screenshot = any(b.name == "take_screenshot" for b in tool_use_blocks)
-                    if has_screenshot:
-                        # Add a text block prompting Claude to analyze the screenshot
-                        user_content.append({
-                            "type": "text",
-                            "text": "Please analyze the screenshot above. Check if there are any visual errors, "
-                                    "error messages, or issues visible. Then provide a summary of the result to the user."
-                        })
-                        # Update the last message with the analysis prompt
-                        messages[-1]["content"] = user_content
-
                     logger.info("[BoxLite Agent] Tool calls executed, continuing to let Claude analyze results")
                     continue  # Force next iteration
 
@@ -749,6 +757,120 @@ When a user selects a source and asks you to clone it:
         except Exception as e:
             logger.error(f"[BoxLite Agent] Error fetching source: {e}", exc_info=True)
             return None
+
+    # ============================================
+    # Checkpoint Methods
+    # ============================================
+
+    def _ensure_checkpoint_project(self, source_id: str) -> Optional[str]:
+        """
+        Ensure a checkpoint project exists for the current source.
+        Creates one if it doesn't exist.
+
+        Returns:
+            Project ID if successful, None otherwise
+        """
+        if self.current_project_id:
+            return self.current_project_id
+
+        try:
+            # Get source info for project name
+            source_file = SOURCES_DIR / f"{source_id}.json"
+            source_url = None
+            project_name = f"Clone {source_id[:8]}"
+
+            if source_file.exists():
+                with open(source_file, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                    source_url = data.get("source_url", "")
+                    page_title = data.get("page_title", "")
+                    if page_title:
+                        project_name = page_title[:50]
+
+            self.current_source_url = source_url
+
+            # Get or create project
+            project = checkpoint_store.get_or_create_project(
+                name=project_name,
+                source_id=source_id,
+                source_url=source_url,
+            )
+
+            self.current_project_id = project.id
+            logger.info(f"[BoxLite Agent] Checkpoint project ready: {project.id}")
+            return project.id
+
+        except Exception as e:
+            logger.error(f"[BoxLite Agent] Failed to create checkpoint project: {e}")
+            return None
+
+    async def _maybe_save_checkpoint(self) -> bool:
+        """
+        Auto-save checkpoint after task completion.
+
+        Returns:
+            True if checkpoint was saved
+        """
+        if not self.current_project_id:
+            logger.info("[BoxLite Agent] No project, skipping checkpoint")
+            return False
+
+        try:
+            # Check for build errors before saving
+            errors = await self.sandbox.get_build_errors(source="terminal")
+            if errors:
+                logger.info(f"[BoxLite Agent] Build has {len(errors)} errors, skipping checkpoint")
+                return False
+
+            # Get current state for checkpoint
+            conversation = self.memory.get_messages_for_api()
+            files = await self._get_all_files()
+
+            # Generate checkpoint name
+            checkpoint_name = f"Auto-save ({datetime.now().strftime('%H:%M:%S')})"
+
+            # Save checkpoint
+            checkpoint = checkpoint_store.save_checkpoint(
+                project_id=self.current_project_id,
+                name=checkpoint_name,
+                conversation=conversation,
+                files=files,
+                metadata={
+                    "session_id": self.session_id,
+                    "source_id": self.current_source_id,
+                    "auto_saved": True,
+                }
+            )
+
+            if checkpoint:
+                logger.info(f"[BoxLite Agent] Saved checkpoint: {checkpoint.id}")
+                return True
+            return False
+
+        except Exception as e:
+            logger.error(f"[BoxLite Agent] Failed to save checkpoint: {e}")
+            return False
+
+    async def _get_all_files(self) -> Dict[str, str]:
+        """Get all files from sandbox for checkpoint"""
+        files = {}
+        try:
+            # List all files in sandbox
+            file_list = await self.sandbox.list_files("/")
+            for file_entry in file_list:
+                if file_entry.type == "file" and not file_entry.name.startswith("."):
+                    # Skip node_modules and large directories
+                    if "node_modules" in file_entry.path:
+                        continue
+                    try:
+                        content = await self.sandbox.read_file(file_entry.path)
+                        if content and len(content) < 100000:  # Skip very large files
+                            files[file_entry.path] = content
+                    except Exception:
+                        pass
+        except Exception as e:
+            logger.warning(f"[BoxLite Agent] Error listing files: {e}")
+        return files
 
 
 # ============================================

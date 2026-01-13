@@ -1129,26 +1129,42 @@ class BoxLiteSandboxManager:
                         full_page=False  # Just viewport
                     )
 
-                    # Compress with Pillow (like Claude Code does)
+                    # Compress with Pillow - aggressive compression to avoid context overflow
                     try:
                         from PIL import Image
                         import io
 
                         img = Image.open(io.BytesIO(screenshot_bytes))
+                        original_size = len(screenshot_bytes)
 
-                        # Resize to max 800px width (reduces tokens significantly)
-                        max_width = 800
-                        if img.width > max_width:
-                            ratio = max_width / img.width
-                            new_size = (max_width, int(img.height * ratio))
+                        # Resize to max 600px width (more aggressive than 800px)
+                        max_width = 600
+                        max_height = 800  # Also limit height to avoid tall screenshots
+
+                        # Calculate resize ratio
+                        width_ratio = max_width / img.width if img.width > max_width else 1
+                        height_ratio = max_height / img.height if img.height > max_height else 1
+                        ratio = min(width_ratio, height_ratio)
+
+                        if ratio < 1:
+                            new_size = (int(img.width * ratio), int(img.height * ratio))
                             img = img.resize(new_size, Image.LANCZOS)
 
-                        # Convert to JPEG with compression
-                        buffer = io.BytesIO()
-                        img.convert('RGB').save(buffer, format='JPEG', quality=60, optimize=True)
-                        screenshot_bytes = buffer.getvalue()
+                        # Convert to JPEG with aggressive compression
+                        # Start with quality 50, reduce if still too large
+                        quality = 50
+                        max_bytes = 50000  # 50KB limit for base64 (about 67KB after encoding)
 
-                        logger.info(f"[Sandbox] Screenshot compressed with Pillow: {len(screenshot_bytes)} bytes")
+                        while quality >= 20:
+                            buffer = io.BytesIO()
+                            img.convert('RGB').save(buffer, format='JPEG', quality=quality, optimize=True)
+                            screenshot_bytes = buffer.getvalue()
+
+                            if len(screenshot_bytes) <= max_bytes:
+                                break
+                            quality -= 10
+
+                        logger.info(f"[Sandbox] Screenshot compressed: {original_size} -> {len(screenshot_bytes)} bytes (quality={quality}, size={img.width}x{img.height})")
                     except ImportError:
                         logger.warning("[Sandbox] Pillow not available, using raw PNG")
 

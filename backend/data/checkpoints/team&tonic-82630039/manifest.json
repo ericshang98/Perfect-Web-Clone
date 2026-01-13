@@ -1,0 +1,17 @@
+{
+  "id": "team&tonic-82630039",
+  "name": "Team&Tonic",
+  "description": "",
+  "source_id": "454162c4-0012-4a4e-a16b-a5ff0007a8ca",
+  "source_url": "https://www.teamandtonic.com/",
+  "thumbnail": null,
+  "is_showcase": false,
+  "created_at": 1768271010.5732732,
+  "updated_at": 1768271793.319455,
+  "checkpoints": [
+    "cp_001",
+    "cp_002",
+    "cp_003"
+  ],
+  "current_checkpoint": "cp_003"
+}

@@ -41,6 +41,7 @@ export type ServerMessageType =
   | "file_written"     // NEW: 实时文件写入
   | "file_deleted"     // NEW: 文件删除
   | "terminal_output"  // NEW: 终端输出
+  | "trigger_checkpoint_save"  // Backend requests frontend to save checkpoint
   | "error"
   | "done"
   | "pong"
@@ -158,6 +159,8 @@ export interface BoxLiteWebSocketOptions {
   onFileWritten?: (payload: FileWrittenPayload) => void;
   onFileDeleted?: (payload: { path: string }) => void;
   onTerminalOutput?: (payload: TerminalOutputPayload) => void;
+  // Checkpoint save trigger (backend asks frontend to save with full data)
+  onTriggerCheckpointSave?: (payload: { project_id: string; files_count: number }) => void;
   // Worker Agent event callbacks (Multi-Agent)
   onWorkerSpawned?: (payload: WorkerSpawnedPayload) => void;
   onWorkerStarted?: (payload: { worker_id: string; section_name: string }) => void;
@@ -361,6 +364,11 @@ export class BoxLiteAgentClient {
         case "terminal_output":
           // Terminal output notification
           this.options.onTerminalOutput?.(payload as unknown as TerminalOutputPayload);
+          break;
+
+        case "trigger_checkpoint_save":
+          // Backend requests frontend to save checkpoint with full conversation data
+          this.options.onTriggerCheckpointSave?.(payload as { project_id: string; files_count: number });
           break;
 
         case "error":

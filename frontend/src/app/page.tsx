@@ -3,13 +3,13 @@
 import {
   Header,
   HeroWithInput,
-  Logos,
-  FeaturesList,
-  FeaturesAccordion,
   Features,
   ShowcasesGallery,
   Footer,
   QuantumScene,
+  DemoVideo,
+  ComparisonTable,
+  AgentToolkit,
 } from "@/components/landing";
 import { Header as HeaderType, Section } from "@/types/landing";
 
@@ -29,17 +29,37 @@ const headerConfig: HeaderType = {
   nav: {
     items: [
       {
-        title: "Tools",
-        icon: "Wrench",
+        title: "Product",
+        icon: "Package",
         children: [
           {
-            title: "Web Extractor",
+            title: "Full Page Clone",
+            description: "Clone entire homepage with all sections",
+            url: "/extractor",
+            icon: "LayoutTemplate",
+          },
+          {
+            title: "Section Clone",
+            description: "Coming Soon · ⭐ Star us on GitHub",
+            url: "https://github.com/ericshang98/Perfect-Web-Clone",
+            target: "_blank",
+            icon: "LayoutList",
+            badge: "Soon",
+          },
+        ],
+      },
+      {
+        title: "Step",
+        icon: "ListOrdered",
+        children: [
+          {
+            title: "Step 1: Extractor",
             description: "Extract webpage structure and styles",
             url: "/extractor",
             icon: "Globe",
           },
           {
-            title: "Clone Agent",
+            title: "Step 2: Agent",
             description: "AI-powered code generation",
             url: "/agent",
             icon: "Bot",
@@ -53,12 +73,13 @@ const headerConfig: HeaderType = {
       },
       {
         title: "Docs",
-        url: "/docs",
+        url: "https://perfectwebclone.com/docs",
+        target: "_blank",
         icon: "BookOpenText",
       },
       {
         title: "GitHub",
-        url: "https://github.com/ericshang98",
+        url: "https://github.com/ericshang98/Perfect-Web-Clone",
         target: "_blank",
         icon: "Github",
       },
@@ -86,30 +107,19 @@ const headerConfig: HeaderType = {
 const heroConfig: Section = {
   id: "hero",
   block: "hero-with-input",
-  title: "Perfect means 100% web clone",
-  highlight_text: "100%",
+  title: "multi-agent for web cloning",
+  highlight_text: "multi-agent",
   description:
-    "Others guess from screenshots. We extract the real code — DOM, styles, components, interactions. Get pixel-perfect, maintainable output in seconds.",
+    "Not just a wrapper around an LLM. Multi-agent collaboration with real tools, self-correction loops, and a complete sandbox environment to build production-ready code from scratch.",
   announcement: {
-    title: "See the Difference →",
-    url: "#comparison",
+    title: "Built with Claude Agent SDK →",
+    url: "#architecture",
   },
   buttons: [],
 };
 
 // Page content configuration
 const pageConfig = {
-  logos: {
-    title: "Export to Your Favorite Framework",
-    items: [
-      { title: "Next.js", image: { src: "/logos/nextjs.svg", alt: "Next.js" } },
-      { title: "React", image: { src: "/logos/react.svg", alt: "React" } },
-      { title: "TailwindCSS", image: { src: "/logos/tailwindcss.svg", alt: "TailwindCSS" } },
-      { title: "Vue", image: { src: "/logos/vue.svg", alt: "Vue" } },
-      { title: "TypeScript", image: { src: "/logos/typescript.svg", alt: "TypeScript" } },
-    ],
-  },
-
   comparison: {
     id: "comparison",
     label: "The Difference",
@@ -144,44 +154,6 @@ const pageConfig = {
         description:
           "Clean components, flexible units, preserved animations, code you can actually ship.",
         icon: "Sparkles",
-      },
-    ],
-  },
-
-  problem: {
-    id: "problem",
-    label: "Why Others Fail",
-    title: "The Screenshot Approach is Fundamentally Broken",
-    description:
-      "When you screenshot a webpage, you capture pixels — not code. No amount of AI can perfectly reconstruct what was lost.",
-    items: [
-      {
-        title: "Lost Responsive Design",
-        description:
-          "Screenshots are fixed-size images. The AI has no idea about breakpoints, flexible units, or how the layout should adapt. You get hardcoded pixel values that break on every screen size.",
-        icon: "Monitor",
-        image: { src: "/features/responsive.png", alt: "Responsive" },
-      },
-      {
-        title: "Dead Interactions",
-        description:
-          "Hover effects, animations, transitions, scroll behaviors — all invisible in a screenshot. You get a static snapshot, not a living webpage.",
-        icon: "MousePointerClick",
-        image: { src: "/features/interactions.png", alt: "Interactions" },
-      },
-      {
-        title: "Guessed Structure",
-        description:
-          "AI sees visual patterns and makes assumptions. Semantic HTML, accessibility attributes, component boundaries — all lost. You get divs all the way down.",
-        icon: "HelpCircle",
-        image: { src: "/features/structure.png", alt: "Structure" },
-      },
-      {
-        title: "Unmaintainable Output",
-        description:
-          "The generated code is a tangled mess with no logical organization. Every change requires starting from scratch. It's faster to rewrite than to modify.",
-        icon: "Code",
-        image: { src: "/features/maintainable.png", alt: "Maintainable" },
       },
     ],
   },
@@ -270,47 +242,41 @@ const pageConfig = {
     description:
       "See what others have built with Perfect Web Clone. Click any card to explore.",
     items: [
+      // Featured: Did Global Cinema - checkpoint demo (click to run)
       {
-        title: "Stripe Homepage",
-        description: "Financial infrastructure for the internet",
-        source_url: "https://stripe.com",
-        url: "/showcase/stripe",
-        image: { src: "/showcases/stripe.png", alt: "Stripe Clone" },
+        title: "Did Global Cinema",
+        description: "Film production company website - Click to run live demo",
+        source_url: "https://www.dg-cinema.com/en",
+        image: { src: "/showcases/did-global-cinema/website.png", alt: "Did Global Cinema Clone" },
+        chatImage: { src: "/showcases/did-global-cinema/chat.png", alt: "Did Global Cinema Chat" },
+        checkpoint: {
+          project_id: "did-global-cinema-aaf71f95",
+          checkpoint_id: "cp_005",
+        },
       },
+      // Featured: Cake Equity - checkpoint demo (click to run)
       {
-        title: "Vercel Dashboard",
-        description: "Deploy web projects with zero config",
-        source_url: "https://vercel.com",
-        url: "/showcase/vercel",
-        image: { src: "/showcases/vercel.png", alt: "Vercel Clone" },
+        title: "Cake Equity",
+        description: "Cap table & equity management - Click to run live demo",
+        source_url: "https://www.cakeequity.com",
+        image: { src: "/showcases/cake-equity/website.png", alt: "Cake Equity Clone" },
+        chatImage: { src: "/showcases/cake-equity/chat.png", alt: "Cake Equity Chat" },
+        checkpoint: {
+          project_id: "cake-equity-|-cap-table-and-eq-c18b9b37",
+          checkpoint_id: "cp_002",
+        },
       },
+      // Featured: Team&Tonic - checkpoint demo (click to run)
       {
-        title: "Linear App",
-        description: "Issue tracking for modern teams",
-        source_url: "https://linear.app",
-        url: "/showcase/linear",
-        image: { src: "/showcases/linear.png", alt: "Linear Clone" },
-      },
-      {
-        title: "Notion Landing",
-        description: "All-in-one workspace",
-        source_url: "https://notion.so",
-        url: "/showcase/notion",
-        image: { src: "/showcases/notion.png", alt: "Notion Clone" },
-      },
-      {
-        title: "Figma Website",
-        description: "Collaborative design tool",
-        source_url: "https://figma.com",
-        url: "/showcase/figma",
-        image: { src: "/showcases/figma.png", alt: "Figma Clone" },
-      },
-      {
-        title: "Slack Landing",
-        description: "Business communication platform",
-        source_url: "https://slack.com",
-        url: "/showcase/slack",
-        image: { src: "/showcases/slack.png", alt: "Slack Clone" },
+        title: "Team&Tonic",
+        description: "Brand agency website - Click to run live demo",
+        source_url: "https://www.teamandtonic.com",
+        image: { src: "/showcases/team-and-tonic/website.png", alt: "Team&Tonic Clone" },
+        chatImage: { src: "/showcases/team-and-tonic/chat.png", alt: "Team&Tonic Chat" },
+        checkpoint: {
+          project_id: "team&tonic-82630039",
+          checkpoint_id: "cp_003",
+        },
       },
     ],
     buttons: [{ title: "View All Clones →", url: "/showcases", variant: "outline" as const }],
@@ -334,20 +300,20 @@ const pageConfig = {
       {
         title: "Resources",
         children: [
-          { title: "Documentation", url: "/docs" },
+          { title: "Documentation", url: "https://perfectwebclone.com/docs" },
           { title: "About", url: "/about" },
         ],
       },
       {
         title: "Links",
         children: [
-          { title: "GitHub", url: "https://github.com/ericshang98" },
+          { title: "GitHub", url: "https://github.com/ericshang98/Perfect-Web-Clone" },
           { title: "Playwright", url: "https://playwright.dev" },
         ],
       },
     ],
     social: [
-      { icon: "Github", url: "https://github.com/ericshang98", title: "GitHub" },
+      { icon: "Github", url: "https://github.com/ericshang98/Perfect-Web-Clone", title: "GitHub" },
     ],
   },
 };
@@ -370,11 +336,21 @@ export default function HomePage() {
 
       <ShowcasesGallery {...pageConfig.showcase} />
 
-      <Logos {...pageConfig.logos} />
+      {/* Demo Video - placed after Gallery */}
+      <DemoVideo
+        id="demo"
+        videoSrc="/demo.mp4"
+        label="Demo"
+        title="See It In Action"
+        description="Watch how Nexting extracts real code from any webpage and generates production-ready components."
+        className="bg-muted"
+      />
 
-      <FeaturesList {...pageConfig.comparison} className="bg-muted" />
+      {/* Comparison Table - vs Cursor/Claude Code/Copilot */}
+      <ComparisonTable id="comparison" />
 
-      <FeaturesAccordion {...pageConfig.problem} />
+      {/* Agent Toolkit - 40+ Tools */}
+      <AgentToolkit id="toolkit" className="bg-muted" />
 
       <Features {...pageConfig.solution} />
 

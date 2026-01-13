@@ -570,7 +570,7 @@ export type ExtractionStatus = 'idle' | 'loading' | 'success' | 'error';
 /**
  * Tab 类型
  */
-export type PlaywrightTab = 'overview' | 'layout' | 'elements' | 'styles' | 'assets' | 'css' | 'network' | 'resources' | 'techstack' | 'components' | 'ai-div';
+export type PlaywrightTab = 'overview' | 'layout' | 'elements' | 'styles' | 'assets' | 'css' | 'network' | 'resources' | 'techstack' | 'components';
 
 /**
  * 元素筛选类型
@@ -607,103 +607,3 @@ export const ELEMENT_FILTERS: Record<ElementFilterType, { label: string; tags: s
     tags: ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'span', 'strong', 'em', 'li']
   }
 };
-
-
-// ==================== AI Division Types ====================
-
-/**
- * AI Division semantic types
- */
-export type AIDivisionType =
-  | 'header'
-  | 'footer'
-  | 'navigation'
-  | 'hero'
-  | 'content'
-  | 'features'
-  | 'cta'
-  | 'testimonial'
-  | 'pricing'
-  | 'contact'
-  | 'sidebar'
-  | 'section';
-
-/**
- * AI Division info
- */
-export interface AIDivision {
-  id: string;
-  name: string;
-  type: AIDivisionType;
-  description: string;
-  divIndices: number[];
-  rect: {
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-  };
-  estimatedTokens: number;
-  priority: number;
-}
-
-/**
- * Validation result for AI divisions
- */
-export interface AIDivisionValidation {
-  isMutuallyExclusive: boolean;
-  coversFullPage: boolean;
-  largeDivisions: Array<{
-    id: string;
-    name: string;
-    estimatedTokens: number;
-    estimatedChars: number;
-    suggestion: string;
-  }>;
-  missingIndices: number[];
-  overlappingIndices: number[];
-}
-
-/**
- * Complete AI division result
- */
-export interface AIDivisionResult {
-  success: boolean;
-  divisions: AIDivision[];
-  validation: AIDivisionValidation | null;
-  fromCache: boolean;
-  processingTimeMs: number;
-  error?: string;
-  retryCount?: number;
-}
-
-/**
- * Top-level div summary for AI division request
- */
-export interface TopLevelDivSummary {
-  index: number;
-  tag: string;
-  id: string | null;
-  classes: string[];
-  rect: {
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-  };
-  innerHtmlLength: number;
-  estimatedTokens: number;
-}
-
-/**
- * AI Division request
- */
-export interface AIDivideRequest {
-  url: string;
-  screenshot: string;
-  domTree: ElementInfo;
-  viewportWidth: number;
-  viewportHeight: number;
-  pageHeight: number;
-  useCache?: boolean;
-}

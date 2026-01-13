@@ -3,8 +3,9 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { ExternalLink, X, Eye } from "lucide-react";
+import { ExternalLink, X, Eye, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -17,7 +18,17 @@ interface ShowcaseItem {
     src: string;
     alt: string;
   };
+  // Chat dialog image (for split preview)
+  chatImage?: {
+    src: string;
+    alt: string;
+  };
   source_url?: string;
+  // Checkpoint restore link (takes priority over url)
+  checkpoint?: {
+    project_id: string;
+    checkpoint_id: string;
+  };
 }
 
 interface ShowcasesGalleryProps {
@@ -45,28 +56,39 @@ export function ShowcasesGallery({
   className,
 }: ShowcasesGalleryProps) {
   const [selectedItem, setSelectedItem] = useState<ShowcaseItem | null>(null);
+  const router = useRouter();
+
+  // Handle card click - checkpoint items navigate to agent page, others open modal
+  const handleCardClick = (item: ShowcaseItem) => {
+    if (item.checkpoint) {
+      // Navigate to agent page with checkpoint params
+      const params = new URLSearchParams({
+        checkpoint: item.checkpoint.checkpoint_id,
+        project: item.checkpoint.project_id,
+      });
+      router.push(`/agent?${params.toString()}`);
+    } else {
+      // Open modal for non-checkpoint items
+      setSelectedItem(item);
+    }
+  };
 
   return (
     <section id={id} className={cn("py-16 md:py-24", className)}>
       <div className="container">
         <motion.div
-          className="mb-10 text-center"
+          className="mb-10 flex items-baseline justify-between"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5 }}
         >
-          {label && (
-            <span className="text-primary mb-2 block text-sm font-medium uppercase tracking-wider">
-              {label}
-            </span>
-          )}
-          <h2 className="text-foreground mb-4 text-3xl font-bold lg:text-4xl">
-            {title}
+          <h2 className="text-foreground text-3xl font-bold lg:text-4xl">
+            Gallery
           </h2>
-          <p className="text-muted-foreground mx-auto max-w-2xl text-lg">
-            {description}
-          </p>
+          <span className="text-muted-foreground text-sm font-medium uppercase tracking-wider">
+            {title}
+          </span>
         </motion.div>
 
         {/* Grid Layout - 3 per row */}
@@ -82,18 +104,18 @@ export function ShowcasesGallery({
                 duration: 0.4,
                 delay: index * 0.03,
               }}
-              onClick={() => setSelectedItem(item)}
+              onClick={() => handleCardClick(item)}
             >
-              {/* Two images side by side */}
+              {/* Two images side by side - Website larger, Chat smaller */}
               <div className="flex gap-2 p-3">
-                {/* Website Screenshot */}
-                <div className="relative aspect-[4/3] flex-1 overflow-hidden rounded-md bg-muted">
+                {/* Website Screenshot - Larger (2:1 ratio) */}
+                <div className="relative aspect-[4/3] flex-[2] overflow-hidden rounded-md bg-muted">
                   {item.image?.src ? (
                     <Image
                       src={item.image.src}
                       alt={item.image.alt || item.title}
                       fill
-                      sizes="(max-width: 640px) 50vw, (max-width: 768px) 25vw, 16vw"
+                      sizes="(max-width: 640px) 60vw, (max-width: 768px) 30vw, 20vw"
                       className="object-cover transition-transform duration-300 group-hover:scale-105"
                     />
                   ) : (
@@ -103,29 +125,42 @@ export function ShowcasesGallery({
                       </span>
                     </div>
                   )}
-                  {/* Label */}
-                  <div className="absolute bottom-1 left-1 rounded bg-black/60 px-1.5 py-0.5 text-[10px] text-white">
-                    Website
-                  </div>
                 </div>
 
-                {/* Dialog/Chat Thumbnail */}
-                <div className="relative aspect-[4/3] flex-1 overflow-hidden rounded-md bg-muted">
-                  <div className="flex h-full items-center justify-center">
-                    <span className="text-muted-foreground text-2xl font-bold opacity-20">
-                      Chat
-                    </span>
-                  </div>
+                {/* Dialog/Chat Thumbnail - Smaller */}
+                <div className="relative aspect-[3/4] flex-1 overflow-hidden rounded-md bg-muted">
+                  {item.chatImage?.src ? (
+                    <Image
+                      src={item.chatImage.src}
+                      alt={item.chatImage.alt || `${item.title} Chat`}
+                      fill
+                      sizes="(max-width: 640px) 30vw, (max-width: 768px) 15vw, 10vw"
+                      className="object-cover object-top transition-transform duration-300 group-hover:scale-105"
+                    />
+                  ) : (
+                    <div className="flex h-full items-center justify-center">
+                      <span className="text-muted-foreground text-2xl font-bold opacity-20">
+                        Chat
+                      </span>
+                    </div>
+                  )}
                   {/* Label */}
                   <div className="absolute bottom-1 left-1 rounded bg-black/60 px-1.5 py-0.5 text-[10px] text-white">
-                    Dialog
+                    Agent
                   </div>
                 </div>
               </div>
 
-              {/* Hover Overlay */}
+              {/* Hover Overlay - different icon for checkpoint items */}
               <div className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 transition-opacity group-hover:opacity-100 rounded-lg">
-                <Eye className="h-6 w-6 text-white" />
+                {item.checkpoint ? (
+                  <div className="flex flex-col items-center gap-1">
+                    <Play className="h-8 w-8 text-white fill-white" />
+                    <span className="text-white text-xs font-medium">Run Demo</span>
+                  </div>
+                ) : (
+                  <Eye className="h-6 w-6 text-white" />
+                )}
               </div>
 
               <div className="px-3 pb-3">

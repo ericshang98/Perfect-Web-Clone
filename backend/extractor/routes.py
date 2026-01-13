@@ -7,11 +7,11 @@ FastAPI Routes for Playwright Extractor Module
 - POST /api/extractor/extract/quick - 快速提取（分阶段，首次响应）
 - GET /api/extractor/extract/{request_id}/status - 获取提取状态和后续数据
 - GET /api/extractor/health - 健康检查
-- POST /api/extractor/ai-divide - AI 智能分区
-- GET /api/extractor/ai-divide/cache/{url_hash} - 获取缓存的 AI 分区结果
 """
 
 from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel
+from typing import Optional
 from datetime import datetime
 import logging
 
@@ -227,137 +227,6 @@ async def cleanup_browser():
         }
     except Exception as e:
         logger.error(f"清理失败: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-# ==================== AI Division Endpoints ====================
-
-from pydantic import BaseModel
-from typing import List, Dict, Any, Optional
-from .ai_divider import ai_divider, ai_divider_cache
-
-
-class TopLevelDivInput(BaseModel):
-    """Top-level div summary input"""
-    index: int
-    tag: str
-    id: Optional[str] = None
-    classes: List[str] = []
-    rect: Dict[str, float]
-    inner_html_length: int
-    estimated_tokens: int
-
-
-class AIDivideRequest(BaseModel):
-    """AI division request"""
-    url: str
-    screenshot: Optional[str] = None  # Base64 encoded (optional)
-    dom_tree: Dict[str, Any]  # Full DOM tree from extraction
-    viewport_width: int = 1920
-    viewport_height: int = 1080
-    page_height: int = 1080
-    use_cache: bool = True
-    use_screenshot: bool = True  # Set to False to use layout data only
-
-
-@router.post('/ai-divide')
-async def ai_divide_page(request: AIDivideRequest):
-    """
-    AI 智能分区
-
-    使用 LLM 分析页面截图和 DOM 结构，智能划分页面区块。
-
-    Request Body:
-        {
-            "url": "https://example.com",
-            "screenshot": "base64...",
-            "dom_tree": {...},
-            "viewport_width": 1920,
-            "viewport_height": 1080,
-            "page_height": 5000,
-            "use_cache": true
-        }
-
-    Returns:
-        {
-            "success": true,
-            "divisions": [...],
-            "validation": {...},
-            "from_cache": false,
-            "processing_time_ms": 2500
-        }
-    """
-    try:
-        logger.info(f"[AI Divide] Starting analysis for: {request.url}")
-
-        result = await ai_divider.analyze(
-            url=request.url,
-            screenshot=request.screenshot,
-            dom_tree=request.dom_tree,
-            viewport_width=request.viewport_width,
-            viewport_height=request.viewport_height,
-            page_height=request.page_height,
-            use_cache=request.use_cache,
-            use_screenshot=request.use_screenshot,
-        )
-
-        if result.success:
-            logger.info(
-                f"[AI Divide] Success: {len(result.divisions)} divisions, "
-                f"from_cache={result.from_cache}, time={result.processing_time_ms}ms"
-            )
-        else:
-            logger.warning(f"[AI Divide] Failed: {result.error}")
-
-        return result.to_dict()
-
-    except Exception as e:
-        logger.error(f"[AI Divide] Exception: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@router.get('/ai-divide/cache/{url_hash}')
-async def get_cached_ai_division(url_hash: str):
-    """
-    获取缓存的 AI 分区结果
-
-    Args:
-        url_hash: URL 的 SHA256 哈希前 16 位
-
-    Returns:
-        缓存的分区结果，如果不存在返回 404
-    """
-    try:
-        cached = ai_divider_cache.get_by_hash(url_hash)
-
-        if cached is None:
-            raise HTTPException(
-                status_code=404,
-                detail=f'No cached AI division found for hash: {url_hash}'
-            )
-
-        return cached.to_dict()
-
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"[AI Divide Cache] Exception: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@router.delete('/ai-divide/cache')
-async def clear_ai_division_cache():
-    """
-    清空 AI 分区缓存
-    """
-    try:
-        ai_divider_cache.clear()
-        return {
-            'success': True,
-            'message': 'AI division cache cleared'
-        }
-    except Exception as e:
-        logger.error(f"[AI Divide Cache Clear] Exception: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
 

@@ -105,6 +105,14 @@ try:
 except ImportError as e:
     logger.warning(f"Sources module not available: {e}")
 
+# Checkpoint module (project state checkpoints)
+try:
+    from checkpoint.routes import router as checkpoint_router
+    app.include_router(checkpoint_router)
+    logger.info("Registered: /api/checkpoints/*")
+except ImportError as e:
+    logger.warning(f"Checkpoint module not available: {e}")
+
 
 # ============================================
 # Root Endpoints

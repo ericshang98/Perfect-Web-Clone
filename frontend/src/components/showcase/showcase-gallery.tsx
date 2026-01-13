@@ -153,16 +153,13 @@ export function ShowcaseGallery({
   return (
     <section className="py-12">
       {/* Header */}
-      <div className="text-center mb-10">
-        <Badge variant="outline" className="mb-4">
-          GALLERY
-        </Badge>
-        <h2 className="text-3xl font-bold tracking-tight mb-3">
-          {title}
+      <div className="flex items-baseline justify-between mb-8">
+        <h2 className="text-3xl font-bold tracking-tight">
+          Gallery
         </h2>
-        <p className="text-muted-foreground max-w-2xl mx-auto">
-          {description}
-        </p>
+        <span className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
+          {title}
+        </span>
       </div>
 
       {/* Grid */}
@@ -187,10 +184,9 @@ export function ShowcaseGallery({
 export function ShowcaseGallerySkeleton() {
   return (
     <section className="py-12">
-      <div className="text-center mb-10">
-        <div className="h-6 w-20 bg-muted rounded mx-auto mb-4 animate-pulse" />
-        <div className="h-9 w-64 bg-muted rounded mx-auto mb-3 animate-pulse" />
-        <div className="h-5 w-96 bg-muted rounded mx-auto animate-pulse" />
+      <div className="flex items-baseline justify-between mb-8">
+        <div className="h-9 w-32 bg-muted rounded animate-pulse" />
+        <div className="h-4 w-28 bg-muted rounded animate-pulse" />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

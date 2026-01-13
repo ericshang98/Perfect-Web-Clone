@@ -12,3 +12,7 @@ export { Faq } from "./faq";
 export { Cta } from "./cta";
 export { Footer } from "./footer";
 export { QuantumScene } from "./quantum-scene";
+export { DemoVideo } from "./demo-video";
+export { ComparisonTable } from "./comparison-table";
+export { Architecture } from "./architecture";
+export { AgentToolkit } from "./agent-toolkit";

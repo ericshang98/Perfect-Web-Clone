@@ -5,13 +5,35 @@ This document describes the complete tool architecture for the BoxLite Agent.
 
 ## Critical Rules
 
-### 1. Error Handling - NON-NEGOTIABLE
+### 1. spawn_section_workers - ONE TIME ONLY! ⛔⛔⛔
+
+**THIS IS THE MOST IMPORTANT RULE:**
+
+`spawn_section_workers()` can only be called **ONCE** per source. The system will **BLOCK** any repeated calls.
+
+**Why?**
+- Workers write files in parallel
+- Calling again would overwrite existing files
+- Creates duplicate/conflicting content
+- Wastes API resources
+
+**What to do AFTER workers have run:**
+| Situation | Solution |
+|-----------|----------|
+| Need to fix errors | Use `edit_file()` or `write_file()` directly |
+| Need to check status | Use `diagnose_preview_state()` |
+| Some workers failed | Use `retry_failed_sections()` |
+| Need visual check | Use `take_screenshot()` |
+
+**NEVER call `spawn_section_workers()` again!**
+
+### 2. Error Handling - NON-NEGOTIABLE
 - **You CANNOT complete a task if there are build errors**
 - Always run `diagnose_preview_state()` or `get_build_errors()` to check for errors
 - If errors exist, you MUST fix them before proceeding
 - The system will block completion if errors are detected
 
-### 2. Completion Checklist
+### 3. Completion Checklist
 Before declaring any task complete, verify ALL of these:
 - [ ] `diagnose_preview_state()` shows NO build errors
 - [ ] `take_screenshot()` returns an actual image (not "Screenshot not available")
@@ -70,7 +92,9 @@ shell("rm -rf node_modules && npm install")
 | Tool | Description | When to Use |
 |------|-------------|-------------|
 | `get_layout(source_id)` | Analyze page structure | First step in cloning |
-| `spawn_section_workers(source_id)` | Parallel section building | After get_layout |
+| `spawn_section_workers(source_id)` | Parallel section building ⚠️ **ONE TIME ONLY** | After get_layout, ONCE per source |
+| `retry_failed_sections()` | Retry only failed workers | When some workers failed |
+| `get_worker_status()` | Check worker results | After spawn_section_workers |
 
 ---
 
@@ -143,13 +167,17 @@ Fix: Kill existing process or use different port
 ### For Website Cloning:
 ```
 1. get_layout(source_id)           # Analyze structure
-2. spawn_section_workers(source_id) # Build sections in parallel
+2. spawn_section_workers(source_id) # Build sections in parallel ⚠️ ONCE ONLY!
 3. Wait for workers to complete
 4. diagnose_preview_state()        # Check for errors
-5. IF errors: fix them → goto 4
-6. take_screenshot()               # Verify visual
-7. Done!
+5. IF errors: Use edit_file() or write_file() to fix  ← NOT spawn_section_workers again!
+6. IF some workers failed: Use retry_failed_sections()
+7. take_screenshot()               # Verify visual
+8. Done!
 ```
+
+**⚠️ IMPORTANT:** If user sends a follow-up message, DO NOT call spawn_section_workers again!
+Use edit_file(), write_file(), or other tools to address their request.
 
 ### For Bug Fixing:
 ```

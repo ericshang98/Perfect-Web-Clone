@@ -11,8 +11,9 @@ import { ProjectHeader } from "./project-header";
 import { SourcePanel, type SavedSource } from "./source-panel";
 import { CheckpointPanel } from "./checkpoint-panel";
 import { AppSidebar } from "@/components/app-sidebar";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { NextingAgentChatPanel } from "@/components/agent/chat-panel";
-import type { ChatMessage } from "@/types/agent";
+import type { ChatMessage, ToolCall, ContentBlock } from "@/types/agent";
 import type { BoxLiteSandboxState } from "@/types/boxlite";
 
 // ============================================
@@ -36,6 +37,9 @@ export function BoxLiteAgentPage() {
   const sourceIdParam = searchParams.get("source");
   const themeParam = searchParams.get("theme") as "light" | "dark" | null;
   const autoCloneParam = searchParams.get("autoClone") === "true";
+  // URL params for checkpoint restore (from gallery showcase)
+  const checkpointParam = searchParams.get("checkpoint");
+  const projectParam = searchParams.get("project");
 
   // Sandbox hook (BoxLite infra)
   const {
@@ -53,6 +57,8 @@ export function BoxLiteAgentPage() {
     executeTool,
     agentLogs,
     addAgentLog,
+    clearAgentLogs,
+    restoreAgentLogs,
     fileDiffs,
     clearFileDiff,
     updateState,  // For syncing Agent WebSocket state_update
@@ -71,13 +77,25 @@ export function BoxLiteAgentPage() {
   const [showChatPanel, setShowChatPanel] = useState(true);
   const [showSourcePanel, setShowSourcePanel] = useState(false);
   const [showCheckpointPanel, setShowCheckpointPanel] = useState(false);
-  const [projectName, setProjectName] = useState("Untitled Project");
+  const [projectName, setProjectName] = useState("");
   const [selectedSource, setSelectedSource] = useState<SelectedSource | null>(null);
   const [isAgentLoading, setIsAgentLoading] = useState(false);
+  const [checkpointProjectId, setCheckpointProjectId] = useState<string | null>(null);
 
   // Auto-clone flow state
   const [autoCloneTriggered, setAutoCloneTriggered] = useState(false);
   const [shouldAutoSend, setShouldAutoSend] = useState(false);
+
+  // Auto-restore checkpoint flow state (from gallery showcase)
+  const [autoRestoreTriggered, setAutoRestoreTriggered] = useState(false);
+
+  // Restore checkpoint dialog state
+  const [restoreDialogOpen, setRestoreDialogOpen] = useState(false);
+  const [restoreDialogData, setRestoreDialogData] = useState<{
+    checkpointId: string;
+    projectId: string;
+  } | null>(null);
+  const [isRestoring, setIsRestoring] = useState(false);
 
   // Resizer state
   const [isResizing, setIsResizing] = useState(false);
@@ -146,21 +164,265 @@ export function BoxLiteAgentPage() {
     Object.keys(fileDiffs.diffs).forEach((path) => clearFileDiff(path));
   }, [fileDiffs.diffs, clearFileDiff]);
 
+  // Create or get checkpoint project for a source
+  // This is extracted to be reusable by both manual selection and auto-clone flow
+  const ensureCheckpointProject = useCallback(async (
+    sourceId: string,
+    sourceTitle: string,
+    sourceUrl: string
+  ) => {
+    try {
+      const API_BASE = process.env.NEXT_PUBLIC_BOXLITE_API_URL || "http://localhost:5100";
+      const response = await fetch(`${API_BASE}/api/checkpoints/projects`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: sourceTitle || `Clone ${sourceId.slice(0, 8)}`,
+          source_id: sourceId,
+          source_url: sourceUrl,
+        }),
+      });
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.project?.id) {
+          setCheckpointProjectId(data.project.id);
+          console.log("[Checkpoint] Project ready:", data.project.id);
+          return data.project.id;
+        }
+      }
+    } catch (e) {
+      console.error("[Checkpoint] Failed to create/get project:", e);
+    }
+    return null;
+  }, []);
+
   // Handle source selection
-  const handleSelectSource = useCallback((source: SavedSource) => {
+  const handleSelectSource = useCallback(async (source: SavedSource) => {
     setSelectedSource({
       id: source.id,
       title: source.page_title || "Untitled",
       url: source.source_url,
       theme: source.metadata?.theme || "light",
     });
-  }, []);
+
+    // Create checkpoint project for this source
+    await ensureCheckpointProject(
+      source.id,
+      source.page_title || "Untitled",
+      source.source_url
+    );
+  }, [ensureCheckpointProject]);
+
+  // Handle manual checkpoint save
+  const handleSaveCheckpoint = useCallback(async () => {
+    if (!checkpointProjectId || !state) return;
+
+    try {
+      const API_BASE = process.env.NEXT_PUBLIC_BOXLITE_API_URL || "http://localhost:5100";
+
+      // Save FULL message data including tool calls and content blocks
+      const fullConversation = messages.map(m => ({
+        id: m.id,
+        role: m.role,
+        content: m.content,
+        timestamp: m.timestamp,
+        toolCalls: m.toolCalls || [],
+        contentBlocks: m.contentBlocks || [],
+        isThinking: m.isThinking,
+        images: m.images,
+      }));
+
+      // Generate checkpoint name with project name and timestamp
+      const displayName = projectName || selectedSource?.title || "Project";
+      const timestamp = new Date().toLocaleTimeString();
+      const checkpointName = `${displayName} - Manual save (${timestamp})`;
+
+      const response = await fetch(`${API_BASE}/api/checkpoints/projects/${checkpointProjectId}/save`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: checkpointName,
+          conversation: fullConversation,
+          files: state.files || {},
+          metadata: {
+            manual: true,
+            source_id: selectedSource?.id,
+            project_name: displayName,
+            agent_logs: agentLogs.slice(-100), // Save last 100 agent logs
+          },
+        }),
+      });
+      if (response.ok) {
+        console.log("[Checkpoint] Manual checkpoint saved:", checkpointName);
+        // Trigger refresh in checkpoint panel
+      }
+    } catch (e) {
+      console.error("[Checkpoint] Failed to save:", e);
+    }
+  }, [checkpointProjectId, state, messages, selectedSource, agentLogs, projectName]);
+
+  // Handle checkpoint restore - opens confirmation dialog
+  const handleRestoreCheckpoint = useCallback((checkpointId: string, projectId: string) => {
+    // Use provided projectId or fall back to current project
+    const targetProjectId = projectId || checkpointProjectId;
+    if (!targetProjectId) {
+      alert("No project ID provided for restore");
+      return;
+    }
+
+    // Open confirmation dialog
+    setRestoreDialogData({ checkpointId, projectId: targetProjectId });
+    setRestoreDialogOpen(true);
+  }, [checkpointProjectId]);
+
+  // Actually perform the restore after user confirms
+  const performRestore = useCallback(async () => {
+    if (!restoreDialogData) return;
+
+    const { checkpointId, projectId: targetProjectId } = restoreDialogData;
+    setIsRestoring(true);
+
+    try {
+      const API_BASE = process.env.NEXT_PUBLIC_BOXLITE_API_URL || "http://localhost:5100";
+      const sandboxId = state?.sandbox_id || "default";
+
+      console.log("[Checkpoint] Calling backend restore API...");
+      console.log("[Checkpoint] Sandbox ID:", sandboxId);
+      console.log("[Checkpoint] Project ID:", targetProjectId);
+      console.log("[Checkpoint] Checkpoint ID:", checkpointId);
+
+      // 1. Call backend restore API (writes files to sandbox, restarts dev server)
+      const response = await fetch(
+        `${API_BASE}/api/boxlite/sandbox/${sandboxId}/restore`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            project_id: targetProjectId,
+            checkpoint_id: checkpointId,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Backend restore failed: ${response.status} ${errorText}`);
+      }
+
+      const data = await response.json();
+      if (!data.success) {
+        throw new Error("Backend restore returned failure");
+      }
+
+      console.log("[Checkpoint] Backend restore successful:", data.message);
+      const checkpoint = data.checkpoint;
+
+      // 2. Store conversation + metadata in sessionStorage for post-reload restore
+      const restoreData = {
+        conversation: checkpoint.conversation || [],
+        agentLogs: checkpoint.metadata?.agent_logs || [],
+        checkpointName: checkpoint.name,
+        projectId: targetProjectId,
+        timestamp: Date.now(),
+      };
+      sessionStorage.setItem("checkpoint_restore", JSON.stringify(restoreData));
+      console.log("[Checkpoint] Stored restore data in sessionStorage");
+
+      // 3. Reload the page to fully reinitialize everything
+      console.log("[Checkpoint] Reloading page...");
+      window.location.reload();
+
+    } catch (e) {
+      console.error("[Checkpoint] Failed to restore:", e);
+      alert(`Failed to restore checkpoint: ${e instanceof Error ? e.message : "Unknown error"}`);
+      setIsRestoring(false);
+      setRestoreDialogOpen(false);
+      setRestoreDialogData(null);
+    }
+  }, [restoreDialogData, state]);
 
   // Handle resizing
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     setIsResizing(true);
   }, []);
+
+  // Restore conversation from sessionStorage after page reload (checkpoint restore flow)
+  useEffect(() => {
+    const restoreDataStr = sessionStorage.getItem("checkpoint_restore");
+    if (!restoreDataStr) return;
+
+    try {
+      const restoreData = JSON.parse(restoreDataStr);
+
+      // Check if data is fresh (within last 30 seconds - to handle page reload timing)
+      const age = Date.now() - (restoreData.timestamp || 0);
+      if (age > 30000) {
+        console.log("[Checkpoint] Restore data is stale, ignoring");
+        sessionStorage.removeItem("checkpoint_restore");
+        return;
+      }
+
+      console.log("[Checkpoint] Found restore data in sessionStorage");
+      console.log("[Checkpoint] Restoring checkpoint:", restoreData.checkpointName);
+      console.log("[Checkpoint] Messages:", restoreData.conversation?.length || 0);
+      console.log("[Checkpoint] Agent logs:", restoreData.agentLogs?.length || 0);
+
+      // Restore conversation messages
+      if (restoreData.conversation && restoreData.conversation.length > 0) {
+        const restoredMessages: ChatMessage[] = restoreData.conversation.map(
+          (msg: {
+            id?: string;
+            role: string;
+            content: string;
+            timestamp?: number;
+            toolCalls?: ToolCall[];
+            contentBlocks?: ContentBlock[];
+            isThinking?: boolean;
+            images?: string[];
+          }, index: number) => ({
+            id: msg.id || `restored-${index}-${Date.now()}`,
+            role: msg.role as "user" | "assistant",
+            content: msg.content,
+            timestamp: msg.timestamp || Date.now(),
+            toolCalls: msg.toolCalls || [],
+            contentBlocks: msg.contentBlocks || [],
+            isThinking: msg.isThinking || false,
+            images: msg.images,
+          })
+        );
+        setMessages(restoredMessages);
+      }
+
+      // Restore agent logs
+      if (restoreData.agentLogs && restoreData.agentLogs.length > 0) {
+        restoreAgentLogs(restoreData.agentLogs);
+      }
+
+      // Set checkpoint project ID if provided
+      if (restoreData.projectId) {
+        setCheckpointProjectId(restoreData.projectId);
+      }
+
+      // Show checkpoint panel to indicate successful restore
+      setShowCheckpointPanel(true);
+
+      // Add a notice to agent logs
+      addAgentLog({
+        type: "info",
+        content: `✓ Restored checkpoint: "${restoreData.checkpointName}"`,
+        timestamp: Date.now(),
+      });
+
+      // Clear sessionStorage after restore
+      sessionStorage.removeItem("checkpoint_restore");
+      console.log("[Checkpoint] Restore from sessionStorage complete");
+
+    } catch (e) {
+      console.error("[Checkpoint] Failed to restore from sessionStorage:", e);
+      sessionStorage.removeItem("checkpoint_restore");
+    }
+  }, []); // Run once on mount
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
@@ -210,6 +472,13 @@ export function BoxLiteAgentPage() {
             theme: themeParam || source.metadata?.theme || "light",
           });
 
+          // Create checkpoint project for this source (CRITICAL: was missing!)
+          await ensureCheckpointProject(
+            source.id,
+            source.page_title || "Untitled",
+            source.source_url
+          );
+
           // Open source panel to show selection
           setShowSourcePanel(true);
 
@@ -232,7 +501,82 @@ export function BoxLiteAgentPage() {
     };
 
     loadSourceAndTriggerClone();
-  }, [sourceIdParam, themeParam, autoCloneParam, autoCloneTriggered, isInitialized]);
+  }, [sourceIdParam, themeParam, autoCloneParam, autoCloneTriggered, isInitialized, ensureCheckpointProject]);
+
+  // Auto-restore checkpoint flow: when checkpoint and project params are present
+  // Uses the same approach as performRestore - store data in sessionStorage and reload
+  useEffect(() => {
+    if (!checkpointParam || !projectParam || autoRestoreTriggered || !isInitialized || !state?.sandbox_id) return;
+
+    const triggerAutoRestore = async () => {
+      console.log("[AutoRestore] Starting checkpoint restore from URL params");
+      console.log("[AutoRestore] Project:", projectParam);
+      console.log("[AutoRestore] Checkpoint:", checkpointParam);
+
+      // Mark as triggered immediately to prevent double execution
+      setAutoRestoreTriggered(true);
+
+      try {
+        const API_BASE = process.env.NEXT_PUBLIC_BOXLITE_API_URL || "http://localhost:5100";
+        const sandboxId = state.sandbox_id;
+
+        // 1. Call backend restore API (writes files to sandbox, restarts dev server)
+        const response = await fetch(
+          `${API_BASE}/api/boxlite/sandbox/${sandboxId}/restore`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              project_id: projectParam,
+              checkpoint_id: checkpointParam,
+            }),
+          }
+        );
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`Backend restore failed: ${response.status} ${errorText}`);
+        }
+
+        const data = await response.json();
+        if (!data.success) {
+          throw new Error("Backend restore returned failure");
+        }
+
+        console.log("[AutoRestore] Backend restore successful:", data.message);
+        const checkpoint = data.checkpoint;
+
+        // 2. Store conversation + metadata in sessionStorage for post-reload restore
+        const restoreData = {
+          conversation: checkpoint.conversation || [],
+          agentLogs: checkpoint.metadata?.agent_logs || [],
+          checkpointName: checkpoint.name,
+          projectId: projectParam,
+          timestamp: Date.now(),
+        };
+        sessionStorage.setItem("checkpoint_restore", JSON.stringify(restoreData));
+        console.log("[AutoRestore] Stored restore data in sessionStorage");
+
+        // 3. Reload the page without URL params to prevent infinite loop
+        // Remove checkpoint params from URL before reload
+        const newUrl = new URL(window.location.href);
+        newUrl.searchParams.delete("checkpoint");
+        newUrl.searchParams.delete("project");
+        console.log("[AutoRestore] Reloading page to:", newUrl.pathname);
+        window.location.href = newUrl.toString();
+
+      } catch (e) {
+        console.error("[AutoRestore] Failed to restore:", e);
+        addAgentLog({
+          type: "error",
+          content: `Failed to restore demo: ${e instanceof Error ? e.message : "Unknown error"}`,
+          timestamp: Date.now(),
+        });
+      }
+    };
+
+    triggerAutoRestore();
+  }, [checkpointParam, projectParam, autoRestoreTriggered, isInitialized, state, addAgentLog]);
 
   // Show loading state
   if (!isInitialized) {
@@ -268,7 +612,6 @@ export function BoxLiteAgentPage() {
         {/* Project Header */}
         <ProjectHeader
           projectName={projectName}
-          onProjectNameChange={setProjectName}
           showChatPanel={showChatPanel}
           onToggleChatPanel={() => setShowChatPanel(!showChatPanel)}
           showSourcePanel={showSourcePanel}
@@ -303,6 +646,7 @@ export function BoxLiteAgentPage() {
                 onProjectNameGenerated={setProjectName}
                 shouldAutoSend={shouldAutoSend}
                 onAutoSendComplete={() => setShouldAutoSend(false)}
+                onTriggerCheckpointSave={handleSaveCheckpoint}
               />
             ) : (
               <div className="h-full flex items-center justify-center bg-neutral-50 dark:bg-neutral-900 text-neutral-500">
@@ -390,7 +734,9 @@ export function BoxLiteAgentPage() {
               />
               <div className="flex-shrink-0 w-72 overflow-hidden">
                 <CheckpointPanel
-                  projectId={state?.sandbox_id}
+                  projectId={checkpointProjectId}
+                  onSaveCheckpoint={handleSaveCheckpoint}
+                  onRestoreCheckpoint={handleRestoreCheckpoint}
                   disabled={isAgentLoading}
                 />
               </div>
@@ -398,6 +744,22 @@ export function BoxLiteAgentPage() {
           )}
         </div>
       </main>
+
+      {/* Restore Checkpoint Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={restoreDialogOpen}
+        onClose={() => {
+          setRestoreDialogOpen(false);
+          setRestoreDialogData(null);
+        }}
+        onConfirm={performRestore}
+        title="Restore Checkpoint?"
+        description="This will refresh the page and restore all files, conversation history, and logs to the selected checkpoint. Any unsaved changes will be lost."
+        confirmText="Restore"
+        cancelText="Cancel"
+        variant="warning"
+        isLoading={isRestoring}
+      />
     </div>
   );
 }

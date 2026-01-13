@@ -290,13 +290,20 @@ class BoxLiteAgentProcessor:
         finally:
             self.is_running = False
 
-            # Auto-save checkpoint if build has no errors
-            checkpoint_saved = await self._maybe_save_checkpoint()
-            if checkpoint_saved:
+            # Check if should trigger checkpoint save
+            # Instead of saving from backend (which has limited conversation data),
+            # ask frontend to save (which has full conversation with tool calls)
+            should_save = await self._should_save_checkpoint()
+            if should_save:
+                # Sync files from disk for accurate count
+                sandbox_dict = self.sandbox.get_state_dict()
+                files_count = len(sandbox_dict.get("files", {}))
+
                 yield {
-                    "type": "checkpoint_saved",
+                    "type": "trigger_checkpoint_save",
                     "project_id": self.current_project_id,
-                    "message": "Checkpoint saved automatically",
+                    "files_count": files_count,
+                    "message": "Frontend should save checkpoint with full conversation",
                 }
 
             yield {"type": "done"}
@@ -491,12 +498,22 @@ Use this data to:
                         })
 
                         # Format tool result content for API
-                        # If result is an image object, wrap it in a list (content blocks)
-                        # This is required for Bedrock API compatibility
+                        # Bedrock API requires tool_result content to be string or list of content blocks
                         result_content = tool_result["result"]
-                        if isinstance(result_content, dict) and result_content.get("type") == "image":
-                            # Image content - wrap in list as content blocks
+
+                        # Handle different result types:
+                        # 1. If it's already a list (e.g., image content blocks), use as-is
+                        # 2. If it's an image dict, wrap in list
+                        # 3. Otherwise, convert to string
+                        if isinstance(result_content, list):
+                            # Already a list of content blocks (e.g., from take_screenshot)
+                            pass
+                        elif isinstance(result_content, dict) and result_content.get("type") == "image":
+                            # Single image content block - wrap in list
                             result_content = [result_content]
+                        elif not isinstance(result_content, str):
+                            # Convert other types to string
+                            result_content = str(result_content)
 
                         messages.append({
                             "role": "user",
@@ -521,7 +538,12 @@ Use this data to:
                         self.memory.add_assistant_message(text_content)
 
                 # Check if should continue
-                if not has_tool_use or response.stop_reason == "end_turn":
+                # If there was a tool use, MUST continue to let Claude analyze the result
+                if has_tool_use:
+                    continue  # Force next iteration so Claude can respond to tool result
+
+                # Only check for completion when there's no tool use
+                if response.stop_reason == "end_turn":
                     # =============================================
                     # COMPLETION PRE-CHECK: Must have no errors!
                     # =============================================
@@ -965,51 +987,65 @@ Please fix these errors now."""
         self.current_project_id = project.id
         logger.info(f"[BoxLiteAgent] Created checkpoint project: {project.id}")
 
-    async def _maybe_save_checkpoint(self) -> bool:
+    async def _should_save_checkpoint(self) -> bool:
         """
-        Check if should save checkpoint and do it
+        Check if we should trigger a checkpoint save
 
-        Auto-save when:
-        - We have a project
+        Returns True when:
+        - We have a project ID
         - Task completed successfully (no build errors)
 
         This is called at the end of process_message, after the agent loop
-        has completed. If the agent reached here, it means the completion
-        check passed (no blocking errors).
+        has completed. Frontend will handle the actual save with full
+        conversation data including tool calls.
 
         Returns:
-            True if checkpoint was saved
+            True if checkpoint should be saved
         """
         # Must have a project
         if not self.current_project_id:
             logger.info("[BoxLiteAgent] No project, skipping checkpoint")
             return False
 
-        # Double-check for build errors before saving
-        # This is a safety check - the completion check should have already passed
+        # Double-check for build errors before triggering save
         try:
             errors = await self.sandbox.get_build_errors(source="terminal")
             if errors:
                 logger.info(f"[BoxLiteAgent] Build has {len(errors)} errors, skipping checkpoint")
                 return False
         except Exception as e:
-            logger.warning(f"[BoxLiteAgent] Error check failed: {e}, proceeding with save")
-            # If error check fails, still try to save - better to have checkpoint than not
+            logger.warning(f"[BoxLiteAgent] Error check failed: {e}, proceeding with save trigger")
+            # If error check fails, still trigger save - frontend will handle it
 
-        # All checks passed - save checkpoint!
+        logger.info("[BoxLiteAgent] Checkpoint save should be triggered")
+        return True
+
+    async def _maybe_save_checkpoint_backup(self) -> bool:
+        """
+        Backup checkpoint save from backend (limited conversation data).
+        This is kept as a fallback but frontend-triggered save is preferred.
+        """
+        if not self.current_project_id:
+            return False
+
         try:
-            # Collect conversation
             conversation = self.memory.get_messages_for_api()
-
-            # Collect files from sandbox
-            sandbox_state = self.sandbox.get_state()
+            sandbox_dict = self.sandbox.get_state_dict()
             files = {}
-            for path, content in sandbox_state.files.items():
+            for path, content in sandbox_dict.get("files", {}).items():
                 if isinstance(content, str):
                     files[path] = content
 
-            # Generate checkpoint name
-            checkpoint_name = f"Round {self.conversation_round} - Build OK"
+            logger.info(f"[BoxLiteAgent] Backup checkpoint will save {len(files)} files")
+
+            # Get project name for checkpoint naming
+            project = checkpoint_store.get_project(self.current_project_id)
+            project_name = project.name if project else "Unknown"
+
+            # Generate checkpoint name with project name and timestamp
+            from datetime import datetime
+            timestamp = datetime.now().strftime("%H:%M:%S")
+            checkpoint_name = f"{project_name} - Auto-save ({timestamp})"
 
             # Save checkpoint
             checkpoint = checkpoint_store.save_checkpoint(
@@ -1021,6 +1057,7 @@ Please fix these errors now."""
                     "round": self.conversation_round,
                     "iteration": self.iteration_count,
                     "last_tool": self.last_tool_name,
+                    "project_name": project_name,
                 },
             )
 

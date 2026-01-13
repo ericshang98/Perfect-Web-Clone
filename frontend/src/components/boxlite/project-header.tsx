@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
+import React from "react";
 import { cn } from "@/lib/utils";
 import { Bot, Database, Settings, History } from "lucide-react";
 
@@ -9,7 +9,6 @@ import { Bot, Database, Settings, History } from "lucide-react";
  */
 interface ProjectHeaderProps {
   projectName: string;
-  onProjectNameChange: (name: string) => void;
   showChatPanel: boolean;
   onToggleChatPanel: () => void;
   showSourcePanel: boolean;
@@ -25,7 +24,6 @@ interface ProjectHeaderProps {
  */
 export function ProjectHeader({
   projectName,
-  onProjectNameChange,
   showChatPanel,
   onToggleChatPanel,
   showSourcePanel,
@@ -34,36 +32,6 @@ export function ProjectHeader({
   onToggleCheckpointPanel,
   status = "idle",
 }: ProjectHeaderProps) {
-  const [isEditing, setIsEditing] = useState(false);
-  const [editValue, setEditValue] = useState(projectName);
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  // Focus input when editing starts
-  useEffect(() => {
-    if (isEditing && inputRef.current) {
-      inputRef.current.focus();
-      inputRef.current.select();
-    }
-  }, [isEditing]);
-
-  const handleSave = () => {
-    if (editValue.trim()) {
-      onProjectNameChange(editValue.trim());
-    } else {
-      setEditValue(projectName);
-    }
-    setIsEditing(false);
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
-      handleSave();
-    } else if (e.key === "Escape") {
-      setEditValue(projectName);
-      setIsEditing(false);
-    }
-  };
-
   // Status indicator colors
   const statusColors: Record<string, string> = {
     booting: "bg-yellow-500",
@@ -89,35 +57,16 @@ export function ProjectHeader({
     >
       {/* Left: Project Name + Status */}
       <div className="flex items-center gap-3">
-        {/* Project Name */}
-        {isEditing ? (
-          <input
-            ref={inputRef}
-            type="text"
-            value={editValue}
-            onChange={(e) => setEditValue(e.target.value)}
-            onBlur={handleSave}
-            onKeyDown={handleKeyDown}
+        {/* Project Name (read-only, set by AI) */}
+        {projectName && (
+          <span
             className={cn(
-              "px-2 py-1 text-sm font-medium rounded border",
-              "bg-white dark:bg-neutral-800",
-              "border-neutral-300 dark:border-neutral-600",
-              "text-neutral-900 dark:text-white",
-              "focus:outline-none focus:ring-2 focus:ring-violet-500"
-            )}
-          />
-        ) : (
-          <button
-            onClick={() => setIsEditing(true)}
-            className={cn(
-              "px-2 py-1 text-sm font-medium rounded",
-              "text-neutral-900 dark:text-white",
-              "hover:bg-neutral-100 dark:hover:bg-neutral-800",
-              "transition-colors"
+              "px-2 py-1 text-sm font-medium",
+              "text-neutral-900 dark:text-white"
             )}
           >
             {projectName}
-          </button>
+          </span>
         )}
 
         {/* Status Indicator */}

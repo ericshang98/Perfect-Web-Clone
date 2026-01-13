@@ -307,6 +307,7 @@ export interface UseBoxLiteReturn {
   agentLogs: AgentLogEntry[];
   addAgentLog: (log: AgentLogEntry) => void;
   clearAgentLogs: () => void;
+  restoreAgentLogs: (logs: AgentLogEntry[]) => void;
 
   // File diffs
   fileDiffs: FileDiffState;

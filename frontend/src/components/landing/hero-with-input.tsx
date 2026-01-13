@@ -174,25 +174,68 @@ export function HeroWithInput({
           {error && (
             <p className="text-destructive text-sm mt-2 text-left">{error}</p>
           )}
-          <p className="text-muted-foreground text-sm mt-3">
-            Try: stripe.com, vercel.com, linear.app, or any website
-          </p>
         </form>
 
-        {/* GitHub Support Banner */}
-        <Link
-          href="https://github.com/ericshang98"
-          target="_blank"
-          className="mx-auto mb-8 flex w-fit items-center gap-3 rounded-full bg-muted/50 border border-border/50 px-5 py-2.5 transition-all hover:bg-muted hover:border-border"
-        >
-          <SmartIcon name="Github" className="h-5 w-5" />
-          <span className="text-sm font-medium">GitHub</span>
-          {githubStars !== null && (
-            <span className="text-sm text-muted-foreground">
-              {formatStars(githubStars)} stars
-            </span>
-          )}
-        </Link>
+        {/* GitHub & Commercial Version Buttons */}
+        <div className="mx-auto mb-12 flex w-fit items-center gap-4 flex-wrap justify-center">
+          <Link
+            href="https://github.com/ericshang98/Perfect-Web-Clone"
+            target="_blank"
+            className="flex items-center gap-3 rounded-full bg-muted/50 border border-border/50 px-5 py-2.5 transition-all hover:bg-muted hover:border-border"
+          >
+            <SmartIcon name="Github" className="h-5 w-5" />
+            <span className="text-sm font-medium">GitHub</span>
+            {githubStars !== null && (
+              <span className="text-sm text-muted-foreground">
+                {formatStars(githubStars)} stars
+              </span>
+            )}
+          </Link>
+
+          <Link
+            href="https://perfectwebclone.com"
+            target="_blank"
+            className="group relative flex items-center gap-3 rounded-full bg-gradient-to-r from-violet-600 to-indigo-600 text-white px-6 py-3 transition-all hover:from-violet-500 hover:to-indigo-500 shadow-lg shadow-violet-500/25 hover:shadow-violet-500/40 hover:scale-[1.02]"
+          >
+            <SmartIcon name="Zap" className="h-5 w-5" />
+            <div className="flex flex-col items-start leading-tight">
+              <span className="text-sm font-semibold">Try Online Free</span>
+              <span className="text-xs text-white/70">No setup required</span>
+            </div>
+            <SmartIcon name="ExternalLink" className="h-4 w-4 ml-1 opacity-70 group-hover:opacity-100 transition-opacity" />
+          </Link>
+        </div>
+
+        {/* Value Proposition - Two Columns */}
+        <div className="mx-auto max-w-6xl grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-20 text-left px-4">
+          {/* Left: For Global Builders */}
+          <div className="space-y-3 md:pr-8 md:border-r border-border/40">
+            <div className="flex items-center gap-2 text-muted-foreground/70 text-base uppercase tracking-widest font-medium">
+              <span className="inline-block w-5 h-px bg-foreground/30" />
+              For Builders Going Global
+            </div>
+            <h3 className="text-foreground text-2xl font-medium">
+              Clone any landing page. Ship 100x faster.
+            </h3>
+            <p className="text-muted-foreground/80 text-lg leading-relaxed">
+              Pixel-perfect extraction from real DOM — see a page you love, clone it, ship it.
+            </p>
+          </div>
+
+          {/* Right: Open Source Multi-Agent */}
+          <div className="space-y-3 md:pl-8">
+            <div className="flex items-center gap-2 text-muted-foreground/70 text-base uppercase tracking-widest font-medium">
+              <span className="inline-block w-5 h-px bg-foreground/30" />
+              Open Source Foundation
+            </div>
+            <h3 className="text-foreground text-2xl font-medium">
+              Stable tools. Stable env. Stable workflow.
+            </h3>
+            <p className="text-muted-foreground/80 text-lg leading-relaxed">
+              40+ agent tools in isolated sandbox — the foundation you can trust.
+            </p>
+          </div>
+        </div>
 
         {section.buttons && section.buttons.length > 0 && (
           <div className="flex items-center justify-center gap-4 mb-8">

@@ -317,6 +317,91 @@ async def stop_dev_server(sandbox_id: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+class RestoreCheckpointRequest(BaseModel):
+    """Request to restore a checkpoint"""
+    project_id: str
+    checkpoint_id: str
+
+
+@boxlite_router.post("/sandbox/{sandbox_id}/restore")
+async def restore_checkpoint(sandbox_id: str, request: RestoreCheckpointRequest):
+    """
+    Restore a checkpoint to the sandbox.
+
+    This endpoint:
+    1. Fetches checkpoint data from checkpoint store
+    2. Stops the dev server
+    3. Clears existing files and writes all checkpoint files
+    4. Restarts the dev server
+    5. Returns checkpoint data (conversation, metadata) for frontend to restore
+    """
+    try:
+        from checkpoint import checkpoint_store
+
+        manager = get_sandbox_manager(sandbox_id)
+
+        # 1. Fetch checkpoint data
+        checkpoint = checkpoint_store.get_checkpoint(
+            request.project_id,
+            request.checkpoint_id
+        )
+        if not checkpoint:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Checkpoint not found: {request.project_id}/{request.checkpoint_id}"
+            )
+
+        logger.info(f"[Restore] Starting restore of checkpoint: {checkpoint.name}")
+        logger.info(f"[Restore] Files to restore: {len(checkpoint.files)}")
+
+        # 2. Stop dev server if running
+        await manager.stop_dev_server()
+
+        # 3. Clear existing files in sandbox (keep package.json structure)
+        # First, get current file list
+        current_files = list(manager.state.files.keys())
+        for file_path in current_files:
+            # Skip node_modules and essential config
+            if file_path.startswith("node_modules/"):
+                continue
+            # Clear internal state only
+            if file_path in manager.state.files:
+                del manager.state.files[file_path]
+
+        # 4. Write all checkpoint files to disk and state
+        for file_path, content in checkpoint.files.items():
+            # Write to actual filesystem
+            success = await manager.write_file(file_path, content)
+            if not success:
+                logger.warning(f"[Restore] Failed to write file: {file_path}")
+
+        logger.info(f"[Restore] Wrote {len(checkpoint.files)} files to sandbox")
+
+        # 5. Restart dev server
+        await manager.start_dev_server()
+
+        logger.info(f"[Restore] Checkpoint restore complete: {checkpoint.name}")
+
+        # 6. Return checkpoint data for frontend to restore conversation
+        return {
+            "success": True,
+            "message": f"Restored checkpoint: {checkpoint.name}",
+            "checkpoint": {
+                "id": checkpoint.id,
+                "name": checkpoint.name,
+                "conversation": checkpoint.conversation,
+                "files_count": len(checkpoint.files),
+                "metadata": checkpoint.metadata,
+            }
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"[Restore] Failed to restore checkpoint: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @boxlite_router.get("/sandbox/{sandbox_id}/terminal/{terminal_id}/output")
 async def get_terminal_output(
     sandbox_id: str,

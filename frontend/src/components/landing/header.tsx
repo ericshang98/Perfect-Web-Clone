@@ -146,6 +146,8 @@ export function Header({ header }: { header: HeaderType }) {
                           target={subItem.target || '_self'}
                           title={subItem.title || ''}
                           description={subItem.description || ''}
+                          badge={subItem.badge}
+                          disabled={subItem.is_disabled}
                         >
                           {subItem.icon && (
                             <SmartIcon name={subItem.icon as string} />
@@ -240,30 +242,62 @@ export function Header({ header }: { header: HeaderType }) {
     children,
     href,
     target,
+    badge,
+    disabled,
     ...props
   }: React.ComponentPropsWithoutRef<'li'> & {
     href: string;
     title: string;
     description?: string;
     target?: string;
+    badge?: string;
+    disabled?: boolean;
   }) {
+    const content = (
+      <div className={cn(
+        "grid grid-cols-[auto_1fr] gap-3.5",
+        disabled && "opacity-50 cursor-not-allowed"
+      )}>
+        <div className={cn(
+          "bg-background ring-foreground/10 relative flex size-9 items-center justify-center rounded border border-transparent shadow-sm ring-1",
+          disabled && "bg-muted"
+        )}>
+          {children}
+        </div>
+        <div className="space-y-0.5">
+          <div className="text-foreground text-sm font-medium flex items-center gap-2">
+            {title}
+            {badge && (
+              <span className="text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+                {badge}
+              </span>
+            )}
+          </div>
+          <p className="text-muted-foreground line-clamp-1 text-xs">
+            {description}
+          </p>
+        </div>
+      </div>
+    );
+
+    if (disabled) {
+      return (
+        <li {...props}>
+          <div className="cursor-not-allowed">
+            {content}
+          </div>
+        </li>
+      );
+    }
+
     return (
       <li {...props}>
         <NavigationMenuLink asChild>
           <Link
             href={href}
             target={target || '_self'}
-            className="grid grid-cols-[auto_1fr] gap-3.5"
           >
-            <div className="bg-background ring-foreground/10 relative flex size-9 items-center justify-center rounded border border-transparent shadow-sm ring-1">
-              {children}
-            </div>
-            <div className="space-y-0.5">
-              <div className="text-foreground text-sm font-medium">{title}</div>
-              <p className="text-muted-foreground line-clamp-1 text-xs">
-                {description}
-              </p>
-            </div>
+            {content}
           </Link>
         </NavigationMenuLink>
       </li>

@@ -11,4 +11,4 @@ export { TechStackTab } from "./techstack-tab";
 export { ComponentsTab } from "./components-tab";
 export { ThemeSelectModal } from "./theme-select-modal";
 export { ThemeToggleButton } from "./theme-toggle-button";
-export { AIDivTab } from "./ai-div-tab";
+export { CloneModeToggle, type CloneMode } from "./clone-mode-toggle";
