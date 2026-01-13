@@ -1,0 +1,31 @@
+<svg width="180" height="48" viewBox="0 0 180 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- 文字渐变：紫色到浅灰 -->
+    <linearGradient id="textGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#A8A0C8"/>
+      <stop offset="50%" style="stop-color:#C5BFD8"/>
+      <stop offset="100%" style="stop-color:#E8E4E0"/>
+    </linearGradient>
+    <!-- 月牙渐变 -->
+    <linearGradient id="moonGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#E8E4D8"/>
+      <stop offset="100%" style="stop-color:#D4D0C4"/>
+    </linearGradient>
+    <!-- i 上面的点渐变 -->
+    <linearGradient id="dotGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#9890B8"/>
+      <stop offset="100%" style="stop-color:#B8B0D0"/>
+    </linearGradient>
+  </defs>
+
+  <!-- 月牙 -->
+  <path d="M8 36C8 22 18 12 32 12C20 14 14 22 14 32C14 38 18 42 24 44C16 44 8 42 8 36Z" fill="url(#moonGradient)"/>
+
+  <!-- Nexting 文字 -->
+  <text x="28" y="36" font-family="system-ui, -apple-system, sans-serif" font-size="28" font-weight="600" fill="url(#textGradient)">
+    <tspan>Nex</tspan><tspan fill="url(#textGradient)">t</tspan><tspan fill="#D0C8D8">i</tspan><tspan fill="#E0DCD8">ng</tspan>
+  </text>
+
+  <!-- i 上面的点 -->
+  <circle cx="118" cy="14" r="5" fill="url(#dotGradient)"/>
+</svg>

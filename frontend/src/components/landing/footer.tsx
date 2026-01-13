@@ -40,13 +40,36 @@ export function Footer({ brand, nav, social, copyright, className }: FooterProps
           <div className="min-w-0 space-y-4 break-words md:col-span-2 md:space-y-6">
             <Link href="/" className="flex items-center gap-2">
               {brand?.logo ? (
-                <Image
-                  src={brand.logo}
-                  alt={brand.name || "Logo"}
-                  width={140}
-                  height={38}
-                  className="h-9 w-auto"
-                />
+                brand.logo === "/logo.svg" ? (
+                  <>
+                    {/* Light mode logo */}
+                    <Image
+                      src="/logo-for-light.svg"
+                      alt={brand.name || "Logo"}
+                      width={140}
+                      height={38}
+                      className="h-9 w-auto dark:hidden"
+                      unoptimized
+                    />
+                    {/* Dark mode logo */}
+                    <Image
+                      src="/logo-for-dark.svg"
+                      alt={brand.name || "Logo"}
+                      width={140}
+                      height={38}
+                      className="h-9 w-auto hidden dark:block"
+                      unoptimized
+                    />
+                  </>
+                ) : (
+                  <Image
+                    src={brand.logo}
+                    alt={brand.name || "Logo"}
+                    width={140}
+                    height={38}
+                    className="h-9 w-auto"
+                  />
+                )
               ) : (
                 <>
                   <div className="flex size-8 items-center justify-center rounded-lg bg-primary">
