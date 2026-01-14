@@ -11,6 +11,15 @@ Open-source version without authentication.
     uvicorn main:app --reload --port 5100
 """
 
+# Windows asyncio event loop policy fix for Python 3.8+ (especially 3.14+)
+# This must be set before any other asyncio imports
+# 修复 Windows 上 Python 3.8+ (尤其是 3.14+) 的 asyncio 事件循环策略问题
+import sys
+if sys.platform == 'win32':
+    import asyncio
+    # Use ProactorEventLoop for better subprocess support on Windows
+    asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
+
 import os
 import logging
 from dotenv import load_dotenv

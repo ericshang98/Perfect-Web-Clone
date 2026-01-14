@@ -17,6 +17,7 @@ import json
 import time
 import uuid
 import shutil
+import re
 from typing import Dict, Any, Optional, List
 from dataclasses import dataclass, field, asdict
 from datetime import datetime
@@ -24,6 +25,25 @@ from pathlib import Path
 import logging
 
 logger = logging.getLogger(__name__)
+
+# Windows illegal filename characters: < > : " / \ | ? *
+ILLEGAL_FILENAME_CHARS = re.compile(r'[<>:"/\\|?*]')
+
+
+def sanitize_filename(name: str) -> str:
+    """
+    Sanitize filename for cross-platform compatibility (Windows/macOS/Linux).
+    跨平台文件名清理（兼容 Windows/macOS/Linux）
+
+    Removes or replaces characters that are illegal in Windows filenames.
+    """
+    # Replace illegal characters with dash
+    sanitized = ILLEGAL_FILENAME_CHARS.sub('-', name)
+    # Replace multiple dashes with single dash
+    sanitized = re.sub(r'-+', '-', sanitized)
+    # Remove leading/trailing dashes
+    sanitized = sanitized.strip('-')
+    return sanitized
 
 # Default data directory
 DATA_DIR = Path(__file__).parent.parent / "data" / "checkpoints"
@@ -212,10 +232,10 @@ class CheckpointStore:
         """
         # Generate ID
         if project_id:
-            pid = project_id
+            pid = sanitize_filename(project_id)
         else:
-            # Create slug from name
-            slug = name.lower().replace(" ", "-")[:30]
+            # Create slug from name (sanitize for Windows compatibility)
+            slug = sanitize_filename(name.lower().replace(" ", "-"))[:30]
             pid = f"{slug}-{str(uuid.uuid4())[:8]}"
 
         now = time.time()

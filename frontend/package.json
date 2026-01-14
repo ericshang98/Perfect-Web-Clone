@@ -4,9 +4,9 @@
   "description": "AI-powered web page extraction and cloning",
   "private": true,
   "scripts": {
-    "dev": "NEXT_PUBLIC_BACKEND_URL=http://localhost:5100 next dev -p 3100",
+    "dev": "cross-env NEXT_PUBLIC_BACKEND_URL=http://localhost:5100 next dev -p 3100",
     "build": "next build",
-    "start": "NEXT_PUBLIC_BACKEND_URL=http://localhost:5100 next start -p 3100",
+    "start": "cross-env NEXT_PUBLIC_BACKEND_URL=http://localhost:5100 next start -p 3100",
     "lint": "next lint"
   },
   "dependencies": {
@@ -58,6 +58,7 @@
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "@types/react-syntax-highlighter": "^15.5.13",
+    "cross-env": "^7.0.3",
     "eslint": "^9.0.0",
     "eslint-config-next": "^15.1.0",
     "postcss": "^8.4.0",

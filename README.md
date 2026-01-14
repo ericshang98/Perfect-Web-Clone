@@ -278,6 +278,9 @@ cd perfect-web-clone
 
 2. **Backend Setup**
 
+<details>
+<summary><b>macOS / Linux</b></summary>
+
 ```bash
 cd backend
 
@@ -289,6 +292,24 @@ cp ../.env.example .env
 sh start.sh
 ```
 
+</details>
+
+<details>
+<summary><b>Windows</b></summary>
+
+```cmd
+cd backend
+
+# Copy environment file and add your API key
+copy ..\.env.example .env
+# Edit .env and add your ANTHROPIC_API_KEY
+
+# Start the server (auto-installs dependencies)
+start.bat
+```
+
+</details>
+
 3. **Frontend Setup**
 
 ```bash
@@ -298,7 +319,8 @@ cd frontend
 npm install
 
 # Configure environment (optional)
-cp ../.env.example .env.local
+# macOS/Linux: cp ../.env.example .env.local
+# Windows: copy ..\.env.example .env.local
 
 # Start development server
 npm run dev
@@ -306,7 +328,7 @@ npm run dev
 
 4. **Open the Application**
 
-Navigate to [http://localhost:3000](http://localhost:3000) in your browser.
+Navigate to [http://localhost:3100](http://localhost:3100) in your browser.
 
 ### Usage
 
