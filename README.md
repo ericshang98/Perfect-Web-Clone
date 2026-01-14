@@ -263,7 +263,8 @@ https://github.com/user-attachments/assets/248af639-20d9-45a8-ad0a-660a04a17b68
 
 ### Prerequisites
 
-- Python 3.11+
+- Python 3.11 - 3.12 (recommended)
+  > **Windows users**: Python 3.13+ has asyncio compatibility issues with Playwright. Please use Python 3.11 or 3.12.
 - Node.js 18+
 - Anthropic API Key
 
