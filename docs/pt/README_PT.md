@@ -2,7 +2,7 @@
 
 <div align="center">
 
-**Ferramenta de Clonagem Web Potencializada por IA — Construída com Claude Agent SDK**
+**Sistema Open Source de Agent Co-work**
 
 *Claude Code para clonagem web. Um agente de IA vertical com mais de 40 ferramentas especializadas.*
 
@@ -28,14 +28,14 @@ https://github.com/user-attachments/assets/248af639-20d9-45a8-ad0a-660a04a17b68
 
 **Todo o sistema multi-agente é open source.** Aprenda com ele, use-o, construa sobre ele.
 
-### Por que Multi-Agente?
+### Por que Cowork?
 
-Abordagens tradicionais de IA com um único modelo encontram um limite em tarefas complexas. Um modelo tentando lidar com tudo leva a:
+Trabalhar com uma única IA é como pedir a um colega de trabalho que lide com tudo sozinho — eles ficam sobrecarregados. Abordagens tradicionais de modelo único encontram um limite:
 - Estouro de janela de contexto em páginas grandes
 - Alucinações ao lidar com muitas responsabilidades
 - Processamento sequencial lento
 
-Nossa solução: **Agentes especializados trabalhando em paralelo**, cada um focado no que faz melhor.
+Nossa solução: **Uma equipe de agentes especializados trabalhando juntos**, como colegas de trabalho focados no que cada um faz melhor. Menos vai e vem, mais trabalho feito.
 
 ### Por que não usar Cursor / Claude Code / Copilot?
 

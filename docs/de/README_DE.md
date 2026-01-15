@@ -2,7 +2,7 @@
 
 <div align="center">
 
-**KI-gestütztes Web-Kloning-Tool — Entwickelt mit Claude Agent SDK**
+**Open Source Agent Co-work System**
 
 *Claude Code für Web-Kloning. Ein vertikaler KI-Agent mit über 40 spezialisierten Werkzeugen.*
 
@@ -28,14 +28,14 @@ https://github.com/user-attachments/assets/248af639-20d9-45a8-ad0a-660a04a17b68
 
 **Das gesamte Multi-Agent-System ist Open Source.** Lernen Sie davon, nutzen Sie es, bauen Sie darauf auf.
 
-### Warum Multi-Agent?
+### Warum Cowork?
 
-Traditionelle KI-Ansätze mit einem einzelnen Modell stoßen bei komplexen Aufgaben an Grenzen. Ein Modell, das versucht, alles zu handhaben, führt zu:
+Mit einer einzelnen KI zu arbeiten ist wie einen Kollegen zu bitten, alles alleine zu erledigen — sie werden überfordert. Traditionelle Single-Model-Ansätze stoßen an Grenzen:
 - Kontextfenster-Überlauf bei großen Seiten
 - Halluzinationen bei zu vielen Verantwortlichkeiten
 - Langsame sequenzielle Verarbeitung
 
-Unsere Lösung: **Spezialisierte Agenten arbeiten parallel**, jeder fokussiert auf das, was er am besten kann.
+Unsere Lösung: **Ein Team spezialisierter Agenten arbeitet zusammen**, wie Kollegen, die sich jeweils auf das konzentrieren, was sie am besten können. Weniger Hin und Her, mehr erledigt.
 
 ### Warum nicht einfach Cursor / Claude Code / Copilot verwenden?
 

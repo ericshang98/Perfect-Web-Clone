@@ -2,7 +2,7 @@
 
 <div align="center">
 
-**Công Cụ Clone Web Được Hỗ Trợ Bởi AI — Xây Dựng Với Claude Agent SDK**
+**Hệ Thống Agent Co-work Mã Nguồn Mở**
 
 *Claude Code cho việc clone web. Một AI agent chuyên biệt với hơn 40 công cụ chuyên dụng.*
 
@@ -28,14 +28,14 @@ https://github.com/user-attachments/assets/248af639-20d9-45a8-ad0a-660a04a17b68
 
 **Toàn bộ hệ thống multi-agent là mã nguồn mở.** Học hỏi từ nó, sử dụng nó, xây dựng trên nó.
 
-### Tại Sao Multi-Agent?
+### Tại Sao Cowork?
 
-Các phương pháp AI truyền thống với một model đơn gặp giới hạn với các tác vụ phức tạp. Một model cố gắng xử lý mọi thứ dẫn đến:
+Làm việc với một AI đơn lẻ giống như yêu cầu một đồng nghiệp xử lý mọi thứ một mình — họ sẽ bị quá tải. Các phương pháp model đơn truyền thống gặp giới hạn:
 - Tràn context window trên các trang lớn
 - Ảo giác khi xử lý quá nhiều trách nhiệm
 - Xử lý tuần tự chậm
 
-Giải pháp của chúng tôi: **Các agent chuyên biệt làm việc song song**, mỗi agent tập trung vào điều họ làm tốt nhất.
+Giải pháp của chúng tôi: **Một đội ngũ agent chuyên biệt làm việc cùng nhau**, như đồng nghiệp tập trung vào điều mỗi người làm tốt nhất. Ít qua lại, hoàn thành nhiều hơn.
 
 ### Tại Sao Không Dùng Cursor / Claude Code / Copilot?
 
