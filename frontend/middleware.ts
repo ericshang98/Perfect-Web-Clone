@@ -37,7 +37,19 @@ const AI_REFERRAL_PATTERNS = [
 const NEXTING_API_KEY = 'f1b196f85660';
 const NEXTING_API_ENDPOINT = 'https://auto-web-two.vercel.app/api/v1/events';
 
-// Buffer events and send in batches
+// Send a single event to Nexting
+function sendEvent(event: Record<string, unknown>) {
+  fetch(NEXTING_API_ENDPOINT, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${NEXTING_API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(event),
+  }).catch(() => {}); // Silent fail — never block requests
+}
+
+// Buffer AI events and send in batches
 let eventBuffer: Array<Record<string, unknown>> = [];
 let flushTimeout: ReturnType<typeof setTimeout> | null = null;
 
@@ -66,7 +78,21 @@ function queueEvent(event: Record<string, unknown>) {
   }
 }
 
+// Send a one-time ping on first request to confirm middleware is connected
+let hasSentPing = false;
+
 export function middleware(request: NextRequest) {
+  // Send connection ping on first request (confirms middleware is installed)
+  if (!hasSentPing) {
+    hasSentPing = true;
+    sendEvent({
+      event_type: 'middleware_ping',
+      source: 'middleware',
+      url_path: '/__ping__',
+      timestamp: new Date().toISOString(),
+    });
+  }
+
   const ua = request.headers.get('user-agent') || '';
   const referrer = request.headers.get('referer') || '';
   const url = request.nextUrl;
