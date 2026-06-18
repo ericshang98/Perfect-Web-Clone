@@ -12,7 +12,7 @@ load_dotenv()
 # ==================== Claude Proxy Configuration ====================
 # 中转服务配置
 
-USE_CLAUDE_PROXY = True
+USE_CLAUDE_PROXY = os.getenv("USE_CLAUDE_PROXY", "false").lower() == "true"
 CLAUDE_PROXY_API_KEY = os.getenv("CLAUDE_PROXY_API_KEY", "")
 CLAUDE_PROXY_BASE_URL = os.getenv("CLAUDE_PROXY_BASE_URL", "https://api.anthropic.com/v1/messages")
 CLAUDE_PROXY_MODEL = os.getenv("CLAUDE_PROXY_MODEL", "claude-3-5-sonnet-20241022")

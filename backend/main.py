@@ -172,8 +172,11 @@ async def generate_project_name(request: ProjectNameRequest):
     """
     try:
         # Get API key (support both direct and proxy)
+        # Only route through the proxy when it is explicitly enabled, otherwise
+        # the direct ANTHROPIC_API_KEY must never be sent to a third-party URL.
+        use_proxy = os.getenv("USE_CLAUDE_PROXY", "").lower() == "true"
         api_key = os.getenv("ANTHROPIC_API_KEY") or os.getenv("CLAUDE_PROXY_API_KEY")
-        base_url = os.getenv("CLAUDE_PROXY_BASE_URL")
+        base_url = os.getenv("CLAUDE_PROXY_BASE_URL") if use_proxy else None
 
         if not api_key:
             logger.warning("No API key for project naming")
@@ -291,10 +294,26 @@ if __name__ == "__main__":
 
     port = int(os.getenv("PORT", "5100"))
 
+    # Windows + Python 3.13 + ProactorEventLoop + uvicorn reload is broken:
+    # the reloader's worker inherits the listening socket and
+    # CreateIoCompletionPort rejects it with WinError 87 (see issue #4).
+    # Disable auto-reload only in that exact combination.
+    reload_enabled = not (sys.platform == "win32" and sys.version_info >= (3, 13))
+    if not reload_enabled:
+        logger.warning(
+            "Auto-reload disabled: incompatible with Python %d.%d on Windows. "
+            "Restart the backend manually after code changes.",
+            sys.version_info.major, sys.version_info.minor,
+        )
+
     uvicorn.run(
         "main:app",
         host="0.0.0.0",
         port=port,
-        reload=True,
+        reload=reload_enabled,
         log_level="info",
+        # loop="none" keeps uvicorn from resetting the WindowsProactorEventLoopPolicy
+        # set at the top of this file, which Playwright requires to spawn Chromium
+        # on Windows (see issue #3).
+        loop="none",
     )
