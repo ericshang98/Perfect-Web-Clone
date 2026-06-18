@@ -53,7 +53,10 @@ class ConversationPipeline:
         """
         # 从环境变量获取配置
         self.api_key = api_key or self._get_api_key()
-        self.base_url = base_url or os.getenv("CLAUDE_PROXY_BASE_URL")
+        # 仅当显式启用代理时才使用代理 URL，避免在 USE_CLAUDE_PROXY=false 时
+        # 把官方 API Key 静默转发到第三方代理。
+        use_proxy = os.getenv("USE_CLAUDE_PROXY", "").lower() == "true"
+        self.base_url = base_url or (os.getenv("CLAUDE_PROXY_BASE_URL") if use_proxy else None)
         self.default_model = default_model
         self.enable_fallback = enable_fallback
 
