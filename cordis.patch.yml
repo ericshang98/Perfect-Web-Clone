@@ -1,0 +1,4 @@
+# Install: dsh plugin --profile web add github:ericshang98/Perfect-Web-Clone
+- insert:
+    - id: perfect-web-clone
+      name: 'perfect-web-clone'

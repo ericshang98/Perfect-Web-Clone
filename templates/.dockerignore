@@ -1,0 +1,20 @@
+# .dockerignore — keep the Dockerfile build context small & reproducible.
+#
+# The build stage runs `npm run build` from a clean checkout of the assembled
+# project, so we exclude anything that would either bloat the context or leak a
+# stale build. node_modules and dist are rebuilt inside the image.
+
+node_modules
+dist
+.git
+.gitignore
+
+# Local env / editor noise
+.env
+.env.*
+.DS_Store
+*.log
+
+# Docker assets themselves don't belong in the Node build stage.
+Dockerfile
+.dockerignore

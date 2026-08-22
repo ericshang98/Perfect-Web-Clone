@@ -1,0 +1,27 @@
+/* index.css.template — REFERENCE shape of the file that
+ * `mcp_server/tools/build_deploy.py::assemble_project` writes into the sandbox.
+ *
+ * IMPORTANT: documentation, NOT a runtime template. assemble_project renders
+ * src/index.css in pure Python (`_render_index_css`) and does NOT read this
+ * file. Keep the two in sync if either changes.
+ *
+ * The three Tailwind layers are ALWAYS emitted (identical to
+ * base-project/src/index.css). If the extractor captured root CSS custom
+ * properties (design tokens) under source_data["css"]["css_variables"] (or
+ * ["variables"]), they are appended verbatim inside a :root block so section
+ * components can reference the original variable names. No LLM, no judgement —
+ * a straight passthrough; names are normalized to start with `--`.
+ */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Design tokens copied verbatim from the extracted page. */
+/* (Only emitted when the extraction surfaced css_variables; otherwise the
+ * file ends after the three @tailwind layers above.) Example: */
+:root {
+  --color-primary: {{value}};
+  --color-bg: {{value}};
+  /* ...one line per extracted variable... */
+}

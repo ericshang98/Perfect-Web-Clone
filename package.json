@@ -1,0 +1,35 @@
+{
+  "name": "perfect-web-clone",
+  "version": "3.0.0",
+  "description": "A pixel-clone agent on DeepSeek Harness. Paste a URL. The gates decide, not the model.",
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "deepseek-harness",
+    "pixel-perfect",
+    "web-clone"
+  ],
+  "license": "MIT",
+  "type": "module",
+  "main": "plugin/index.js",
+  "files": [
+    "plugin",
+    "cordis.patch.yml",
+    "skill",
+    "README.md",
+    "LICENSE"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "*",
+    "@deepseek-ai/dsh-tools": "*"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ericshang98/Perfect-Web-Clone.git"
+  }
+}

@@ -1,44 +1,20 @@
-# 环境变量（包含敏感信息）
 .env
 .env.local
-.env.*.local
-
-# 依赖目录
 node_modules/
 venv/
 .venv/
-
-# 构建产物
 dist/
 build/
-.next/
-
-# 缓存
 .cache/
 *.log
 __pycache__/
 *.py[cod]
 .pytest_cache/
-
-# 系统文件
+.ruff_cache/
 .DS_Store
 Thumbs.db
-
-# IDE
 .idea/
 .vscode/
-*.swp
-
-# BoxLite sandbox data (runtime)
-/tmp/
-boxlite-sandboxes/
-
-# User data (sources, checkpoints) - DO NOT commit
-backend/data/sources/
-backend/data/checkpoints/
-backend/checkpoint/data/
-
-# Exception: Gallery demo checkpoints (needed for showcase feature)
-!backend/data/checkpoints/did-global-cinema-aaf71f95/
-!backend/data/checkpoints/cake-equity-|-cap-table-and-eq-c18b9b37/
-!backend/data/checkpoints/team&tonic-82630039/
+*.egg-info/
+core/extractor/_sources/*
+!core/extractor/_sources/.gitkeep
