@@ -1,13 +1,12 @@
 {
   "name": "perfect-web-clone",
   "version": "3.0.0",
-  "description": "A pixel-clone agent on DeepSeek Harness. Paste a URL. The gates decide, not the model.",
+  "description": "Pixel-perfect clones of any webpage. Paste a URL, get a measured Vite + React replica.",
   "keywords": [
-    "dsh",
-    "dsh-plugin",
-    "deepseek-harness",
     "pixel-perfect",
-    "web-clone"
+    "web-clone",
+    "playwright",
+    "dsh-plugin"
   ],
   "license": "MIT",
   "type": "module",

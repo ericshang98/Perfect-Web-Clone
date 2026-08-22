@@ -1,12 +1,12 @@
 [project]
 name = "perfect-web-clone"
 version = "3.0.0"
-description = "A pixel-clone agent on DeepSeek Harness. Paste a URL. The gates decide, not the model."
+description = "Pixel-perfect clones of any webpage. Paste a URL, get a measured Vite + React replica."
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }
 authors = [{ name = "Perfect Web Clone" }]
-keywords = ["web-clone", "pixel-perfect", "deepseek-harness", "playwright"]
+keywords = ["web-clone", "pixel-perfect", "playwright"]
 dependencies = [
     "pydantic>=2.5.0",
     "playwright>=1.44.0",

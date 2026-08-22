@@ -112,8 +112,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="pwc",
         description=(
-            "Perfect Web Clone core: extract, plan, assemble, and measure. "
-            "The gates decide. The model only repairs the worst section."
+            "Pixel-perfect web cloning: extract, plan, assemble, and measure "
+            "a live page into a Vite + React replica."
         ),
     )
     sub = parser.add_subparsers(dest="command")

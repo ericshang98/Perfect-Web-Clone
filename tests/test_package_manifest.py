@@ -12,7 +12,8 @@ def test_dsh_bundle_patch_is_declared():
     assert (ROOT / "skill" / "SKILL.md").is_file()
 
 
-def test_readme_leads_with_gates_not_the_model():
+def test_readme_leads_with_pixel_perfect_cloning():
     text = (ROOT / "README.md").read_text()
-    assert "The gates decide, not the model" in text
-    assert "dsh plugin" in text
+    assert "Pixel-perfect clones of any webpage" in text
+    assert "clone https://example.com" in text
+    assert "DeepSeek Harness" not in text

@@ -12,9 +12,9 @@ description: >-
 
 ## Operating model
 
-The current agent is the harness runtime (DeepSeek Harness, Claude Code, Codex,
-or equivalent). `pwc` is the deterministic hands and eyes. It never calls a
-model. You understand the evidence, author code, and repair the worst section.
+The current coding agent is the runtime. `pwc` is the deterministic hands and
+eyes. It never calls a model. You understand the evidence, author code, and
+repair the worst section.
 
 One request such as `clone https://example.com` authorizes the whole local
 reproduction. Do not stop between phases to announce progress. Ask only when a
@@ -42,8 +42,7 @@ new or resumed run.
 
 ## Tools
 
-Prefer the `pwc_*` DeepSeek Harness tools when they exist. Otherwise run the
-same commands:
+Prefer the `pwc_*` tools when they exist. Otherwise run the same commands:
 
 ```bash
 pwc extract <url>
