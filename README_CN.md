@@ -1,8 +1,8 @@
 # Perfect Web Clone
 
-**完美复刻任意网页。** 丢一个 URL，得到干净、可部署的 Vite + React 站点。过不过看和原站的测量对比，不是看模型自夸。
+**完美复刻任意网页。** 本仓是测量核心。产品是 [Skill](skill/SKILL.md)：一套 agent harness，一句话 `clone <url>` 走完整页、带分数的复刻。
 
-把网页变成截图不算复刻。Perfect Web Clone 抽真实页面、写成真正的组件，再按 section 打分，直到和原站对齐。
+把网页变成截图不算复刻。Skill 逼着 agent 走完：抓取 → 切 section → 干净 React → 构建 → 按测量结果修最差的一块。不许在第一屏停，也不许把长得像但不能点的控件当完成。
 
 ## 你拿到的是什么
 

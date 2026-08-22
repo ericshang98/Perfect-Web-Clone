@@ -1,24 +1,26 @@
 # Perfect Web Clone
 
-**Pixel-perfect clones of any webpage.** Paste a URL. Get a clean, deployable Vite + React replica that is measured against the original — not guessed.
+**Pixel-perfect clones of any webpage.** This repo is the measured core. The product is the [skill](skill/SKILL.md): an agent harness that turns one `clone <url>` into a full-page, scored replica.
 
 English | [中文](README_CN.md)
 
-A screenshot is not a clone. Perfect Web Clone captures the live page, rebuilds it as real components, then scores the result section by section until it matches.
-
-## What you get
-
-- A full-page capture: DOM, computed styles, fonts, images, video
-- Clean Vite + React + Tailwind output, not a dump of the source framework
-- Localized assets — no hotlinks back to the original site
-- Measured gates: source fingerprints, code weight, per-section visual score
-- A repair loop that fixes the worst section and re-measures
+A screenshot is not a clone. The skill drives the agent through capture → section plan → clean React → build → measured repair, and it will not stop after the first viewport or call a similar-looking inert widget “done.”
 
 Say this to your coding agent:
 
 ```text
 clone https://example.com
 ```
+
+## The skill is the product
+
+[`skill/SKILL.md`](skill/SKILL.md) is the harness. Same file is published as [`perfect-web-clone-skill`](https://github.com/ericshang98/perfect-web-clone-skill).
+
+- One request authorizes the whole run
+- Hands and eyes are deterministic (`pwc`) — they never call a model
+- The agent authors code and repairs the worst measured section
+- Done means `ready_for_user_review` or `failed_with_residuals`, with evidence
+- Pixel-perfect is a gate table, not a prompt
 
 ## Install
 
@@ -29,7 +31,7 @@ pip install "git+https://github.com/ericshang98/Perfect-Web-Clone.git"
 playwright install chromium
 ```
 
-Then load the skill from [`perfect-web-clone-skill`](https://github.com/ericshang98/perfect-web-clone-skill) into Claude Code, Codex, or any coding agent that can run `pwc`.
+Load [`perfect-web-clone-skill`](https://github.com/ericshang98/perfect-web-clone-skill) into Claude Code, Codex, or any coding agent that can run `pwc`.
 
 ## How a clone run works
 

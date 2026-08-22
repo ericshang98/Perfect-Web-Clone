@@ -17,3 +17,7 @@ def test_readme_leads_with_pixel_perfect_cloning():
     assert "Pixel-perfect clones of any webpage" in text
     assert "clone https://example.com" in text
     assert "DeepSeek Harness" not in text
+    skill = (ROOT / "skill" / "SKILL.md").read_text()
+    assert "The current agent is the harness runtime" in skill
+    assert "ready_for_user_review" in skill
+    assert (ROOT / "skill" / "references" / "harness-contract.md").is_file()

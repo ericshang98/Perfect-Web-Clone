@@ -30,7 +30,7 @@ def test_no_args_exits_nonzero_and_lists_commands():
     result = _run([])
     assert result.returncode != 0
     combined = (result.stdout + result.stderr).lower()
-    for name in ("extract", "plan", "assemble", "score", "fingerprints", "weight"):
+    for name in ("extract", "plan", "section", "assemble", "score", "fingerprints", "weight"):
         assert name in combined
 
 
@@ -74,6 +74,14 @@ def test_score_identical_images_is_one(tmp_path):
 
 def test_plan_unknown_source_id_is_json_error():
     result = _run(["plan", "does-not-exist-source"])
+    assert result.returncode != 0
+    payload = json.loads(result.stdout)
+    assert payload["ok"] is False
+    assert "source" in payload["error"].lower() or "unknown" in payload["error"].lower()
+
+
+def test_section_unknown_source_id_is_json_error():
+    result = _run(["section", "does-not-exist-source", "hero"])
     assert result.returncode != 0
     payload = json.loads(result.stdout)
     assert payload["ok"] is False

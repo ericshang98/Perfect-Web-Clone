@@ -14,7 +14,7 @@ from typing import Any
 from core.gates import fidelity
 from core.gates.fingerprint import scan_tree
 from core.gates.weight import measure_dist
-from mcp_server.tools.extraction import extract_page, get_section_plan
+from mcp_server.tools.extraction import extract_page, get_section_data, get_section_plan
 
 
 def _dump(payload: Any) -> None:
@@ -37,6 +37,11 @@ def cmd_extract(args: argparse.Namespace) -> int:
 
 def cmd_plan(args: argparse.Namespace) -> int:
     result = get_section_plan(args.source_id)
+    return _exit_from(result)
+
+
+def cmd_section(args: argparse.Namespace) -> int:
+    result = get_section_data(args.source_id, args.name)
     return _exit_from(result)
 
 
@@ -125,6 +130,11 @@ def build_parser() -> argparse.ArgumentParser:
     p_plan = sub.add_parser("plan", help="Deterministic section plan for a source_id")
     p_plan.add_argument("source_id")
     p_plan.set_defaults(func=cmd_plan)
+
+    p_section = sub.add_parser("section", help="Full captured data for one planned section")
+    p_section.add_argument("source_id")
+    p_section.add_argument("name")
+    p_section.set_defaults(func=cmd_section)
 
     p_assemble = sub.add_parser("assemble", help="Write the Vite/React shell for a source_id")
     p_assemble.add_argument("source_id")
